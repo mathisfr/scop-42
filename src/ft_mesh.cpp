@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, ftmath::vec3 color){
+Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[3]){
     _texture = textureId;
     _shader = ourShader;
     bool res = ftloader::OBJ(path_obj, _vertices.Position, _vertices.TexCoords, _vertices.Normal);

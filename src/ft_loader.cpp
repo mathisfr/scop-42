@@ -240,11 +240,25 @@ float* ftloader::OBJTOOPENGLVERTICES(
     const std::vector<ftmath::vec3> &vertices,
     const std::vector<ftmath::vec2> &uvs,
     const std::vector<ftmath::vec3> &normals,
-    const ftmath::vec3 &color
+    const ftmath::vec3 color[3]
 ){
     if (vertices.size() < 1 || uvs.size() < 1 || normals.size() < 1){
         return (float*)0;
     }
+    ftmath::vec3 Colors[3];
+    Colors[0]._x = 1.0f;
+    Colors[0]._y = 1.0f;
+    Colors[0]._z = 0.0f;
+
+    Colors[1]._x = 1.0f;
+    Colors[1]._y = 0.0f;
+    Colors[1]._z = 1.0f;
+
+    Colors[2]._x = 0.0f;
+    Colors[2]._y = 1.0f;
+    Colors[2]._z = 1.0f;
+    int colorChange = 0;
+    int colorIndex = 0;
     const int stride = 8;
     out_size = vertices.size() * (sizeof(float) * stride);
     float *final_vertices = new float[out_size];
@@ -252,6 +266,10 @@ float* ftloader::OBJTOOPENGLVERTICES(
     float colorEffect = 1.0f;
     for (int line = 0; line < out_size; line+=stride)
     {
+        if(colorChange % 3 == 0){
+            colorIndex = (colorIndex + 1) % 3;
+        }
+        colorChange++;
         if (line % stride == 0) colorEffect += 0.1f;
         for(int offset = 0; offset < stride; offset++){
                 switch (offset){
@@ -279,13 +297,13 @@ float* ftloader::OBJTOOPENGLVERTICES(
                     // color
                     // -----
                     case 5:
-                        final_vertices[line + offset] = color._x + 1 / colorEffect;
+                        final_vertices[line + offset] = Colors[colorIndex]._x;
                         break;
                     case 6:
-                        final_vertices[line + offset] = color._y + 1 / colorEffect;
+                        final_vertices[line + offset] = Colors[colorIndex]._y;
                         break;
                     case 7:
-                        final_vertices[line + offset] = color._z + 1 / colorEffect;
+                        final_vertices[line + offset] = Colors[colorIndex]._z;
                         break;
                 }
         }

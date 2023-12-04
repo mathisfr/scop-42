@@ -14,6 +14,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+bool color_mix_transition = false;
 
 // settings
 const unsigned int SCR_WIDTH = 800.0f;
@@ -135,15 +136,20 @@ int main(int argc, char *argv[])
     float scaleY = 1.0f;
     float scaleZ = 1.0f;
 
-    // deltatime
-    // ---------
-
-
-    Mesh object = Mesh(argv[1], texture, ourShader, ftmath::vec3(1.0f,1.0f,1.0f));
+    ftmath::vec3 FacesColor[3];
+    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 0.0f;
+    FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
+    FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
+    Mesh object = Mesh(argv[1], texture, ourShader, FacesColor);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        /*if (color_mix < 0.99f && color_mix_transition == false)
+            color_mix += 0.1f;
+        else if (color_mix > 0.01f && color_mix_transition == true)
+            color_mix -= 0.1f;
+        std::cout << color_mix << std::endl;*/
         // input
         // -----
         processInput(window);
