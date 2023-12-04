@@ -79,5 +79,6 @@ namespace ftmath{
 //  -----------------------
 std::ostream& operator<<(std::ostream& os, const ftmath::vec4& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::vec3& v);
+std::ostream& operator<<(std::ostream& os, const ftmath::vec2& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::m4x4& m);
 #endif

@@ -1,4 +1,5 @@
 #include "ft_math.hpp"
+#include <iomanip>  
 using namespace ftmath;
 
 //  class vec4
@@ -154,13 +155,18 @@ vec4 m4x4::operator*(vec4 &other){
 //  Stream for ftmath class
 //  -----------------------
 std::ostream& operator<<(std::ostream& os, const ftmath::vec4& v){
-    os << '[' << v._x << ", " << v._y << ", " << v._z << ", " << v._w << "]";
+    os << '[' << std::setprecision(2) << v._x << ", " << v._y << ", " << v._z << ", " << v._w << "]";
     return os;
 };
 std::ostream& operator<<(std::ostream& os, const vec3& v){
-    os << '[' << v._x << ", " << v._y << ", " << v._z << "]";
+    os << '[' << std::setprecision(2) << v._x << ", " << v._y << ", " << v._z << "]";
     return os;
 };
+std::ostream& operator<<(std::ostream& os, const vec2& v){
+    os << '['<< std::setprecision(2) << v._x << ", " << v._y << "]";
+    return os;
+}
+
 std::ostream& operator<<(std::ostream& os, const ftmath::m4x4& m){
     // nb1 horizontal line of matrix
     os << '[' << m._m0._x << ", " << m._m1._x << ", " << m._m2._x << ", " << m._m3._x << "]\n";

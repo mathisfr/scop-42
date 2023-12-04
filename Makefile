@@ -7,5 +7,11 @@ IMGUI_SRCS += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/im
 
 scop: scop.cpp $(IMGUI_DIR)/imgui.cpp
 	g++ -o $@ $^ $(GLFW_FLAGS) -Iinclude -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends $(SRCS) $(IMGUI_SRCS)
-fclean:
-	rm -rf scop
+scopd: scop.cpp $(IMGUI_DIR)/imgui.cpp
+	g++ -o $@ $^ $(GLFW_FLAGS) -DDEBUG -Iinclude -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends $(SRCS) $(IMGUI_SRCS)
+remake:
+	rm scop
+	make scop
+remaked:
+	rm scopd
+	make scopd

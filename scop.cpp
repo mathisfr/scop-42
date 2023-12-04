@@ -21,6 +21,14 @@ const unsigned int SCR_HEIGHT = 600.0f;
 
 float visibility = 0.0f;
 
+// visual mode for render obj
+// --------------------------
+enum VISUAL_MODE{
+    VM_WIREFRAME,
+    VM_POINT,
+    VM_FILL
+};
+
 int main(int argc, char *argv[])
 {
     if (argc != 3 ){
@@ -108,12 +116,13 @@ int main(int argc, char *argv[])
     }
     delete(data);
     // uncomment this call to draw in wireframe polygons.
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     Mesh object = Mesh(argv[1], texture, ourShader);
 
 
     // mesh var
     // --------
+    int visual_mode = VM_FILL;
     bool autorotationX = false;
     bool autorotationY = false;
     bool autorotationZ = false;
@@ -143,6 +152,17 @@ int main(int argc, char *argv[])
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        switch(visual_mode){
+            case VM_WIREFRAME:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
+                break;
+            case VM_POINT:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); 
+                break;
+            case VM_FILL:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
+                break;
+        }
         static float f = 0.0f;
         static int counter = 0;
         const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
@@ -192,6 +212,19 @@ int main(int argc, char *argv[])
                     scaleX = 1.0f;
                     scaleY = 1.0f;
                     scaleZ = 1.0f;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        if (ImGui::BeginMenuBar()){
+            if (ImGui::BeginMenu("Other"))
+            {
+                ImGui::RadioButton("Wireframe", &visual_mode, VM_WIREFRAME);
+                ImGui::RadioButton("Point", &visual_mode, VM_POINT);
+                ImGui::RadioButton("Fill", &visual_mode, VM_FILL);
+                if (ImGui::Button("Reset")){
+                    visual_mode = VM_FILL;
                 }
                 ImGui::EndMenu();
             }
