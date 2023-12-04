@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 
 typedef struct OBJ_FORMAT{
     bool vertex;
@@ -203,7 +204,7 @@ bool ftloader::OBJ(
     }else{
         for (unsigned int i = 0; i < vertexIndices.size(); i++){
             ftmath::vec2 uv;
-            uv._x = out_vertices[i]._x;
+            uv._x = out_vertices[i]._z;
             uv._y = out_vertices[i]._y;
             out_uvs.push_back(uv);
         }
@@ -238,39 +239,57 @@ float* ftloader::OBJTOOPENGLVERTICES(
     unsigned int &out_size,
     const std::vector<ftmath::vec3> &vertices,
     const std::vector<ftmath::vec2> &uvs,
-    const std::vector<ftmath::vec3> &normals
+    const std::vector<ftmath::vec3> &normals,
+    const ftmath::vec3 &color
 ){
     if (vertices.size() < 1 || uvs.size() < 1 || normals.size() < 1){
         return (float*)0;
     }
-    const int stride = 5;
-    out_size = (vertices.size() * sizeof(ftmath::vec3) + uvs.size() * sizeof(ftmath::vec2));
+    const int stride = 8;
+    out_size = vertices.size() * (sizeof(float) * stride);
     float *final_vertices = new float[out_size];
-    int vpos = 0;
-    int uvpos = 0;
+    int pos = 0;
+    float colorEffect = 1.0f;
     for (int line = 0; line < out_size; line+=stride)
     {
+        if (line % stride == 0) colorEffect += 0.1f;
         for(int offset = 0; offset < stride; offset++){
                 switch (offset){
+                    // vertices
+                    // --------
                     case 0:
-                        final_vertices[line + offset] = vertices[vpos]._x;
+                        final_vertices[line + offset] = vertices[pos]._x;
                         break;
                     case 1:
-                        final_vertices[line + offset] = vertices[vpos]._y;
+                        final_vertices[line + offset] = vertices[pos]._y;
                         break;
                     case 2:
-                        final_vertices[line + offset] = vertices[vpos]._z;
+                        final_vertices[line + offset] = vertices[pos]._z;
                         break;
+
+                    // texture
+                    // -------
                     case 3:
-                        final_vertices[line + offset] = uvs[uvpos]._x;
+                        final_vertices[line + offset] = uvs[pos]._x;
                         break;
                     case 4:
-                        final_vertices[line + offset] = uvs[uvpos]._y;
+                        final_vertices[line + offset] = uvs[pos]._y;
+                        break;
+
+                    // color
+                    // -----
+                    case 5:
+                        final_vertices[line + offset] = color._x + 1 / colorEffect;
+                        break;
+                    case 6:
+                        final_vertices[line + offset] = color._y + 1 / colorEffect;
+                        break;
+                    case 7:
+                        final_vertices[line + offset] = color._z + 1 / colorEffect;
                         break;
                 }
         }
-        vpos++;
-        uvpos++;
+        pos++;
     }
     return final_vertices;
 }

@@ -117,14 +117,13 @@ int main(int argc, char *argv[])
     delete(data);
     // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    Mesh object = Mesh(argv[1], texture, ourShader);
-
 
     // mesh var
     // --------
+    float color_mix = 0.0f;
     int visual_mode = VM_FILL;
     bool autorotationX = false;
-    bool autorotationY = false;
+    bool autorotationY = true;
     bool autorotationZ = false;
     float rotationX = 0.0f;
     float rotationY = 0.0f;
@@ -135,6 +134,12 @@ int main(int argc, char *argv[])
     float scaleX = 1.0f;
     float scaleY = 1.0f;
     float scaleZ = 1.0f;
+
+    // deltatime
+    // ---------
+
+
+    Mesh object = Mesh(argv[1], texture, ourShader, ftmath::vec3(1.0f,1.0f,1.0f));
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -223,8 +228,10 @@ int main(int argc, char *argv[])
                 ImGui::RadioButton("Wireframe", &visual_mode, VM_WIREFRAME);
                 ImGui::RadioButton("Point", &visual_mode, VM_POINT);
                 ImGui::RadioButton("Fill", &visual_mode, VM_FILL);
+                ImGui::SliderFloat("Color Mix", &color_mix, 0.0f, 1.0f);
                 if (ImGui::Button("Reset")){
                     visual_mode = VM_FILL;
+                    color_mix = 0.0f;
                 }
                 ImGui::EndMenu();
             }
@@ -275,6 +282,9 @@ int main(int argc, char *argv[])
         ftmath::m4x4 projection = ftmath::persp(35.0f, SCR_WIDTH / SCR_HEIGHT, 0.01f, 1000.0f);
         unsigned int projectionShader = glGetUniformLocation(ourShader.ID, "projection");
         glUniformMatrix4fv(projectionShader, 1, GL_FALSE, projection.toglsl());
+
+        unsigned int mixColorShader = glGetUniformLocation(ourShader.ID, "mixColor");
+        glUniform1f(mixColorShader, color_mix);
 
         object.Draw();
 

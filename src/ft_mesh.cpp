@@ -1,13 +1,14 @@
 #include "ft_mesh.hpp"
 #include "ft_loader.hpp"
+#include "ft_math.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader){
+Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, ftmath::vec3 color){
     _texture = textureId;
     _shader = ourShader;
     bool res = ftloader::OBJ(path_obj, _vertices.Position, _vertices.TexCoords, _vertices.Normal);
-    _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal);
+    _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal, color);
     if (_verticesbuffer){
         setupMesh();
     }
@@ -28,10 +29,13 @@ void Mesh::setupMesh(){
 
     glBufferData(GL_ARRAY_BUFFER, _verticesbuffersize, _verticesbuffer, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    const int stride = 8;
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

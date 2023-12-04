@@ -10,7 +10,7 @@ typedef struct Vertices {
 } Vertices;
 class Mesh{
     public:
-        Mesh(const char *path_obj, unsigned int textureId, Shader ourShader);
+        Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, ftmath::vec3 color);
         void Draw();
         ~Mesh();
     private:
