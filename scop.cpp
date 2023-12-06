@@ -93,7 +93,8 @@ int main(int argc, char *argv[])
 
     //  global configuration
     //  --------------------
-    glEnable(GL_DEPTH_TEST); 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
 
     // Shader init
     // -----------
@@ -110,17 +111,13 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int width, height;
     unsigned char *data = ftloader::BMP(argv[2], width, height);
-    if (data)
-    {
+    if (data){
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+        delete(data);
     }
-    else
-    {
+    else{
         std::cout << "Failed to load texture" << std::endl;
     }
-    delete(data);
-    // uncomment this call to draw in wireframe polygons.
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Var Menu
     // --------
@@ -144,8 +141,8 @@ int main(int argc, char *argv[])
     FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
     FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
 
-    Mesh object;
-    try{
+    Mesh object = Mesh(argv[1], texture, scop42shader, FacesColor);;
+    /*try{
         object = Mesh(argv[1], texture, scop42shader, FacesColor);
     }catch(std::exception& e){
         std::cerr << "Sorry we have an error...\n" << e.what();
@@ -155,7 +152,7 @@ int main(int argc, char *argv[])
         glfwDestroyWindow(window);
         glfwTerminate();
         return 1;
-    }
+    }*/
 
     // delta time
     // ----------
@@ -169,7 +166,7 @@ int main(int argc, char *argv[])
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -318,6 +315,7 @@ int main(int argc, char *argv[])
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+    object.clean();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
