@@ -245,32 +245,18 @@ float* ftloader::OBJTOOPENGLVERTICES(
     if (vertices.size() < 1 || uvs.size() < 1 || normals.size() < 1){
         return (float*)0;
     }
-    ftmath::vec3 Colors[3];
-    Colors[0]._x = 1.0f;
-    Colors[0]._y = 1.0f;
-    Colors[0]._z = 0.0f;
-
-    Colors[1]._x = 1.0f;
-    Colors[1]._y = 0.0f;
-    Colors[1]._z = 1.0f;
-
-    Colors[2]._x = 0.0f;
-    Colors[2]._y = 1.0f;
-    Colors[2]._z = 1.0f;
-    int colorChange = 0;
+    int colorVertexIndex = 0;
     int colorIndex = 0;
     const int stride = 8;
     out_size = vertices.size() * (sizeof(float) * stride);
     float *final_vertices = new float[out_size];
     int pos = 0;
-    float colorEffect = 1.0f;
     for (int line = 0; line < out_size; line+=stride)
     {
-        if(colorChange % 3 == 0){
+        if(colorVertexIndex % 3 == 0){
             colorIndex = (colorIndex + 1) % 3;
         }
-        colorChange++;
-        if (line % stride == 0) colorEffect += 0.1f;
+        colorVertexIndex++;
         for(int offset = 0; offset < stride; offset++){
                 switch (offset){
                     // vertices
@@ -297,13 +283,13 @@ float* ftloader::OBJTOOPENGLVERTICES(
                     // color
                     // -----
                     case 5:
-                        final_vertices[line + offset] = Colors[colorIndex]._x;
+                        final_vertices[line + offset] = color[colorIndex]._x;
                         break;
                     case 6:
-                        final_vertices[line + offset] = Colors[colorIndex]._y;
+                        final_vertices[line + offset] = color[colorIndex]._y;
                         break;
                     case 7:
-                        final_vertices[line + offset] = Colors[colorIndex]._z;
+                        final_vertices[line + offset] = color[colorIndex]._z;
                         break;
                 }
         }

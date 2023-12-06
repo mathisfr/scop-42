@@ -137,19 +137,14 @@ int main(int argc, char *argv[])
     float scaleZ = 1.0f;
 
     ftmath::vec3 FacesColor[3];
-    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 0.0f;
-    FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
-    FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
+    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 1.0f;
+    FacesColor[1]._x = 0.5f; FacesColor[1]._y = 0.5f; FacesColor[1]._z = 0.5f;
+    FacesColor[2]._x = 0.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 0.0f;
     Mesh object = Mesh(argv[1], texture, ourShader, FacesColor);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        /*if (color_mix < 0.99f && color_mix_transition == false)
-            color_mix += 0.1f;
-        else if (color_mix > 0.01f && color_mix_transition == true)
-            color_mix -= 0.1f;
-        std::cout << color_mix << std::endl;*/
         // input
         // -----
         processInput(window);
@@ -190,6 +185,8 @@ int main(int argc, char *argv[])
                 if (!autorotationY) ImGui::SliderFloat("Y rotation", &rotationY, -180.0f, 180.0f);
                 if (!autorotationZ) ImGui::SliderFloat("Z rotation", &rotationZ, -180.0f, 180.0f); 
                 if (ImGui::Button("Reset")){
+                    autorotationX = autorotationZ = false;
+                    autorotationY = true;
                     rotationX = 0.0f;
                     rotationY = 0.0f;
                     rotationZ = 0.0f;
