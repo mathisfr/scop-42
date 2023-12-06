@@ -10,16 +10,26 @@ typedef struct Vertices {
 } Vertices;
 class Mesh{
     public:
+        Mesh();
         Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[3]);
+
         void Draw();
-        ~Mesh();
+        void clean();
+        Mesh& operator=(const Mesh &other);
+        ftmath::m4x4 _modelMatrix;
     private:
         Vertices _vertices;
+
         unsigned int _texture;
         Shader _shader;
+
+        ftmath::vec3 _color[3];
+
         float *_verticesbuffer;
         unsigned int _verticesbuffersize;
+
         unsigned int _VAO, _VBO;
+    
         void setupMesh();
         void loadTexture();
 };

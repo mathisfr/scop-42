@@ -2,9 +2,10 @@
 #define FT_LOADER_HPP
 #include <vector>
 #include <iostream>
+#include <exception>
 #include "ft_math.hpp"
 namespace ftloader{
-        bool OBJ(
+        void OBJ(
             const char *path,
             std::vector<ftmath::vec3> &out_vertices,
             std::vector<ftmath::vec2> &out_uvs,
@@ -23,4 +24,12 @@ namespace ftloader{
             int &out_height
         );
 }
+
+class ftloader_OBJ_exception: public std::exception
+{
+  virtual const char* what() const throw()
+  {
+    return "Error to load OBJ file !";
+  }
+};
 #endif

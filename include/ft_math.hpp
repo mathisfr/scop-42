@@ -73,6 +73,13 @@ namespace ftmath{
     //  Projection matrix
     //  -----------------
     m4x4 persp(float fov, float ratio, float near, float far);
+
+    //  Interpolation
+    //  -------------
+    template <class T>
+    T lerp(T x, T y, float t) {
+        return x * (1.0f - t) + y * t;
+    }
 };
 
 //  Stream for ftmath class
@@ -81,4 +88,5 @@ std::ostream& operator<<(std::ostream& os, const ftmath::vec4& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::vec3& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::vec2& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::m4x4& m);
+
 #endif

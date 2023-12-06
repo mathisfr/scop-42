@@ -4,18 +4,35 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+Mesh::Mesh(){};
+
 Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[3]){
+    _modelMatrix = ftmath::m4x4(1.0f);
     _texture = textureId;
-    _shader = ourShader;
-    bool res = ftloader::OBJ(path_obj, _vertices.Position, _vertices.TexCoords, _vertices.Normal);
-    _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal, color);
-    if (_verticesbuffer){
-        setupMesh();
+    for (int i = 0; i < 3; i++){
+        _color[i] = color[i];
     }
-    delete(_verticesbuffer);
+    _shader = ourShader;
+    ftloader::OBJ(path_obj, _vertices.Position, _vertices.TexCoords, _vertices.Normal);
+    _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal, _color);
+    setupMesh();
 }
 
-Mesh::~Mesh(){
+Mesh& Mesh::operator=(const Mesh &other){
+    _modelMatrix = ftmath::m4x4(1.0f);
+    _texture = other._texture;
+    _shader = other._shader;
+    for (int i = 0; i < 3; i++){
+        _color[i] = other._color[i];
+    }
+    _vertices = other._vertices;
+    _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal, _color);
+    setupMesh();
+    return *this;
+}
+
+void Mesh::clean(){
+    delete(_verticesbuffer);
     glDeleteVertexArrays(1, &_VAO);
     glDeleteBuffers(1, &_VBO);
 }
@@ -42,6 +59,9 @@ void Mesh::setupMesh(){
 }
 
 void Mesh::Draw(){
+    unsigned int modelShader = glGetUniformLocation(_shader.ID, "model");
+    glUniformMatrix4fv(modelShader, 1, GL_FALSE, _modelMatrix.toglsl());
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _texture);
 
@@ -51,4 +71,5 @@ void Mesh::Draw(){
     glBindVertexArray(_VAO);
     glDrawArrays(GL_TRIANGLES, 0, _vertices.Position.size());
     glBindVertexArray(0);
+    _modelMatrix = ftmath::m4x4(1.0f);
 }

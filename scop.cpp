@@ -7,13 +7,13 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
 #include <iostream>
+#include <exception>
 #include "ft_shader.hpp"
 #include "ft_math.hpp"
 #include "ft_loader.hpp"
 #include "ft_mesh.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
 bool color_mix_transition = false;
 
 // settings
@@ -29,6 +29,8 @@ enum VISUAL_MODE{
     VM_POINT,
     VM_FILL
 };
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 int main(int argc, char *argv[])
 {
@@ -69,6 +71,7 @@ int main(int argc, char *argv[])
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+    glfwSetKeyCallback(window, key_callback);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
 
     // Shader init
     // -----------
-    Shader ourShader("shader/scop.vs", "shader/scop.fs");
+    Shader scop42shader("shader/scop.vs", "shader/scop.fs");
 
     // texture
     // -------
@@ -119,7 +122,7 @@ int main(int argc, char *argv[])
     // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    // mesh var
+    // Var Menu
     // --------
     float color_mix = 0.0f;
     int visual_mode = VM_FILL;
@@ -137,27 +140,59 @@ int main(int argc, char *argv[])
     float scaleZ = 1.0f;
 
     ftmath::vec3 FacesColor[3];
-    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 1.0f;
-    FacesColor[1]._x = 0.5f; FacesColor[1]._y = 0.5f; FacesColor[1]._z = 0.5f;
-    FacesColor[2]._x = 0.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 0.0f;
-    Mesh object = Mesh(argv[1], texture, ourShader, FacesColor);
+    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 0.0f;
+    FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
+    FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
+
+    Mesh object;
+    try{
+        object = Mesh(argv[1], texture, scop42shader, FacesColor);
+    }catch(std::exception& e){
+        std::cerr << "Sorry we have an error...\n" << e.what();
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return 1;
+    }
+
+    // delta time
+    // ----------
+    float currentFrame = 0.0f;
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        // input
-        // -----
-        processInput(window);
-
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // delta time
+        // ----------
+        currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        // transition between color and texture
+        // ------------------------------------
+        if(color_mix_transition){
+            color_mix = ftmath::lerp<float>(color_mix, 1.0f, deltaTime);
+        }else if (!color_mix_transition){
+            color_mix = ftmath::lerp<float>(color_mix, 0.0f, deltaTime);
+        }
+        unsigned int mixColorShader = glGetUniformLocation(scop42shader.ID, "mixColor");
+        glUniform1f(mixColorShader, color_mix);
+
+
+        // setup lite visual mode opengl vertex rendering
+        //  ---------------------------------------------
         switch(visual_mode){
             case VM_WIREFRAME:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
@@ -169,8 +204,9 @@ int main(int argc, char *argv[])
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
                 break;
         }
-        static float f = 0.0f;
-        static int counter = 0;
+
+        // setup imgui menu
+        // ----------------
         const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImVec2(SCR_WIDTH, 0));
@@ -178,7 +214,7 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Rotation"))
             {
-                ImGui::Checkbox("Auto X rotation", &autorotationX);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Auto X rotation", &autorotationX);
                 ImGui::Checkbox("Auto Y rotation", &autorotationY); 
                 ImGui::Checkbox("Auto Z rotation", &autorotationZ); 
                 if (!autorotationX) ImGui::SliderFloat("X rotation", &rotationX, -180.0f, 180.0f);
@@ -240,55 +276,41 @@ int main(int argc, char *argv[])
             }
             ImGui::EndMenuBar();
         }
-        // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        // ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-        // if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            // counter++;
-        // ImGui::SameLine();
-        // ImGui::Text("counter = %d", counter);
-        // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
-
-        //  model matrix
-        //  ------------
-        ftmath::m4x4 model(1.0f);
-        model = ftmath::translatem4(model, ftmath::vec3(translateX, translateY, translateZ));
-        model = ftmath::scalem4(model, ftmath::vec3(scaleX, scaleY, scaleZ));
-        if (autorotationX){
-            model = ftmath::rotatexm4(model, (float)glfwGetTime() * 60.0f);
-        }else{
-            model = ftmath::rotatexm4(model, rotationX);
-        }
-        if (autorotationY){
-            model = ftmath::rotateym4(model, (float)glfwGetTime() * 60.0f);
-        }else{
-            model = ftmath::rotateym4(model, rotationY);
-        }
-        if (autorotationZ){
-            model = ftmath::rotatezm4(model, (float)glfwGetTime() * 60.0f);
-        }else{
-            model = ftmath::rotatezm4(model, rotationZ);
-        }
-        unsigned int modelShader = glGetUniformLocation(ourShader.ID, "model");
-        glUniformMatrix4fv(modelShader, 1, GL_FALSE, model.toglsl());
 
         //  view matrix
         //  -----------
         ftmath::m4x4 view(1.0f);
         view = ftmath::translatem4(view, ftmath::vec3(0.0f, 0.0f, 4.0f));
-        unsigned int viewShader = glGetUniformLocation(ourShader.ID, "view");
+        unsigned int viewShader = glGetUniformLocation(scop42shader.ID, "view");
         glUniformMatrix4fv(viewShader, 1, GL_FALSE, view.toglsl());
 
         //  projection matrix
         //  -----------------
         // m4x4 persp(float fov, float ratio, float near, float far);
         ftmath::m4x4 projection = ftmath::persp(35.0f, SCR_WIDTH / SCR_HEIGHT, 0.01f, 1000.0f);
-        unsigned int projectionShader = glGetUniformLocation(ourShader.ID, "projection");
+        unsigned int projectionShader = glGetUniformLocation(scop42shader.ID, "projection");
         glUniformMatrix4fv(projectionShader, 1, GL_FALSE, projection.toglsl());
 
-        unsigned int mixColorShader = glGetUniformLocation(ourShader.ID, "mixColor");
-        glUniform1f(mixColorShader, color_mix);
-
+        //  model matrix
+        //  ------------
+        object._modelMatrix = ftmath::translatem4(object._modelMatrix, ftmath::vec3(translateX, translateY, translateZ));
+        object._modelMatrix = ftmath::scalem4(object._modelMatrix, ftmath::vec3(scaleX, scaleY, scaleZ));
+        if (autorotationX){
+            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, (float)glfwGetTime() * 60.0f);
+        }else{
+            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, rotationX);
+        }
+        if (autorotationY){
+            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, (float)glfwGetTime() * 60.0f);
+        }else{
+            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, rotationY);
+        }
+        if (autorotationZ){
+            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, (float)glfwGetTime() * 60.0f);
+        }else{
+            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, rotationZ);
+        }
         object.Draw();
 
         ImGui::Render();
@@ -306,18 +328,15 @@ int main(int argc, char *argv[])
 
 //  hook user input
 //  ---------------
-void processInput(GLFWwindow *window)
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (key == GLFW_KEY_E && action == GLFW_PRESS){
+        color_mix_transition = !color_mix_transition;
+        std::cout << color_mix_transition << std::endl;
+    }
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        visibility-=0.005f;
-        if (visibility >= 2.0f)
-            visibility = 2.0f;
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        visibility+=0.005f;
-        if (visibility <= -1.0f)
-            visibility = -1.0f;
+    }
 }
 
 //  hook when user rezie the window

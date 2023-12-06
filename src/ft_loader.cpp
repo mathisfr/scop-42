@@ -6,16 +6,19 @@
 #include <sstream>
 #include <string>
 #include <cstdlib>
+#include <cstdint>
+#define TIRANGLE_VERTICES 3
 
 typedef struct OBJ_FORMAT{
     bool vertex;
     bool uv;
     bool normal;
+    bool face;
 }   OBJ_FORMAT;
 
 //  Load OBJ 3d model
 //  -----------------
-bool ftloader::OBJ(
+void ftloader::OBJ(
             const char *path,
             std::vector<ftmath::vec3> &out_vertices,
             std::vector<ftmath::vec2> &out_uvs,
@@ -25,18 +28,27 @@ bool ftloader::OBJ(
     std::vector<ftmath::vec3> temp_vertices;
     std::vector<ftmath::vec2> temp_uvs;
     std::vector<ftmath::vec3> temp_normals;
+
     OBJ_FORMAT objFormat;
-    objFormat.vertex = objFormat.uv = objFormat.normal = false;
+    objFormat.vertex = objFormat.uv = objFormat.normal = objFormat.face = false;
+
     std::ifstream file;
-    const int triangleFace = 3;
     file.open(path, std::ios::in);
     if(!file.is_open()){
-        std::cerr << "Error in OBJ loader: is_open()\n";
-        return false;
+        throw ftloader_OBJ_exception();
     }
     std::string line;
+
+    // convert text to data
+    // --------------------
     while (getline(file, line)){
         ftmath::vec3 v;
+        /*
+        *   v   :   vertex
+        *   vt  :   texture coordinate
+        *   vn  :   normal
+        *   f   :   face
+        */
         if (line.substr(0, 2) == "v "){
             objFormat.vertex = true;
             std::istringstream s(line.substr(2));
@@ -59,13 +71,23 @@ bool ftloader::OBJ(
             s >> v._z;
             temp_normals.push_back(v);
         }else if (line.substr(0, 2) == "f "){
+            /*
+            *   face parsing
+            *   multiple format possible
+            *   f 1 2 3 ...
+            *   f 1/1 2/2 3/3 ...
+            *   f 1//1 2//2 3//3 ...
+            *   f 1/1/1 2/2/2 3/3/3 ...
+            *   Actually tested only with first and last possibility
+            */
+            objFormat.face = true;
             std::istringstream s(line.substr(2));
             std::vector<std::string> in_param;
             std::string tmp_in_param = "";
             std::string out_param;
-            #ifdef DEBUG
-            std::cout << "\n---------[\n";
-            #endif
+
+            //  split word separate by space
+            //  ----------------------------
             while(s >> tmp_in_param){
                 in_param.push_back(tmp_in_param);
                 #ifdef DEBUG
@@ -73,31 +95,17 @@ bool ftloader::OBJ(
                 #endif
             }
             int params_size = in_param.size();
-            #ifdef DEBUG
-            std::cout << "\n\n\nparams_size "<< in_param.size() <<"\n\n\n";
-            #endif
             if (params_size < 3 || params_size > 4){
-                std::cerr << "Error load OBJ\n";
                 file.close();
-                return false;
+                throw ftloader_OBJ_exception();
             }
-            #ifdef DEBUG
-            std::cout << "]---------\n\n";
-            #endif
-            std::stringstream ss_param[triangleFace];
-            #ifdef DEBUG
-            std::cout << "f ";
-            #endif
-            for(unsigned int i = 0; i < triangleFace; i++){
+            std::stringstream ss_param[TIRANGLE_VERTICES];
+            for(unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
                 ss_param[i].str(in_param[i]);
-                #ifdef DEBUG
-                std::cout << ss_param[i].str() << '\t';
-                #endif
             }
-            #ifdef DEBUG
-            std::cout << '\n';
-            #endif
-            for (unsigned int i = 0; i < triangleFace; i++){
+            //  for all params, split by '/' and store values
+            //  ---------------------------------------------
+            for (unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
                 unsigned int index = 0;
                 while (getline(ss_param[i], out_param, '/')
                     || ((!objFormat.vertex && !objFormat.uv) && getline(ss_param[i], out_param, '\n'))){
@@ -105,44 +113,25 @@ bool ftloader::OBJ(
                     {
                         case 0:
                             vertexIndices.push_back(std::stoul(out_param));
-                            #ifdef DEBUG
-                            std::cout << "v " << std::stoul(out_param) << '\t';
-                            #endif
                             break;
                         case 1:
                             uvIndices.push_back(std::stoul(out_param));
-                            #ifdef DEBUG
-                            std::cout << "vt " << std::stoul(out_param) << '\t';
-                            #endif
                             break;
                         case 2:
                             normalIndices.push_back(std::stoul(out_param));
-                            #ifdef DEBUG
-                            std::cout << "vn " << std::stoul(out_param);
-                            #endif
                             break;
                     }
-                    #ifdef DEBUG
-                    std::cout << '\n';
-                    #endif
                     index++;
                 }
             }
+            //  case where we have 4 param in the same line. (convert quad to triangle)
+            //  ---------------------------------------------------------------------
             if (params_size == 4){
-                std::stringstream ss_param_convert[triangleFace];
-                #ifdef DEBUG
-                std::cout << "\nf ";
-                #endif
-                for(unsigned int i = 0; i < triangleFace; i++){
+                std::stringstream ss_param_convert[TIRANGLE_VERTICES];
+                for(unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
                     ss_param_convert[i].str(in_param[(i+2)%4]);
-                    #ifdef DEBUG
-                    std::cout << ss_param_convert[i].str() << '\t';
-                    #endif
                 }
-                #ifdef DEBUG
-                std::cout << '\n';
-                #endif
-                for (unsigned int i = 0; i < triangleFace; i++){
+                for (unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
                 unsigned int index = 0;
                 while (getline(ss_param_convert[i], out_param, '/')
                     || ((!objFormat.vertex && !objFormat.uv) && getline(ss_param_convert[i], out_param, '\n'))){
@@ -150,51 +139,39 @@ bool ftloader::OBJ(
                     {
                         case 0:
                             vertexIndices.push_back(std::stoul(out_param));
-                            #ifdef DEBUG
-                            std::cout << "v " << std::stoul(out_param) << '\t';
-                            #endif
                             break;
                         case 1:
                             uvIndices.push_back(std::stoul(out_param));
-                            #ifdef DEBUG
-                            std::cout << "vt " << std::stoul(out_param) << '\t';
-                            #endif
                             break;
                         case 2:
                             normalIndices.push_back(std::stoul(out_param));
-                            #ifdef DEBUG
-                            std::cout << "vn " << std::stoul(out_param);
-                            #endif
                             break;
                     }
-                    #ifdef DEBUG
-                    std::cout << '\n';
-                    #endif
                     index++;
                 }
             }
             }
         }
     }
-    #ifdef DEBUG
-    std::cout << "ok 3"<< std::endl;
-    #endif
-    if (objFormat.vertex == false){
-        std::cerr << "Error load OBJ\n";
+    // check if vertex and face is present
+    // -----------------------------
+    if (!objFormat.vertex){
         file.close();
-        return false;
+        throw ftloader_OBJ_exception();
     }
-    #ifdef DEBUG
-    std::cout << "ok 4"<< std::endl;
-    #endif
+    if (!objFormat.face){
+        file.close();
+        throw ftloader_OBJ_exception();
+    }
+    //  fill out vertices array
+    //  -----------------------
     for (unsigned int i = 0; i < vertexIndices.size(); i++){
         unsigned int vertexIndex = vertexIndices[i];
         ftmath::vec3 vertex = temp_vertices[vertexIndex - 1];
         out_vertices.push_back(vertex);
     }
-    #ifdef DEBUG
-    std::cout << "ok 5"<< std::endl;
-    #endif
+    //  fill out uv array
+    //  -----------------------
     if (objFormat.uv){
         for (unsigned int i = 0; i < uvIndices.size(); i++){
             unsigned int uvIndex = uvIndices[i];
@@ -209,9 +186,8 @@ bool ftloader::OBJ(
             out_uvs.push_back(uv);
         }
     }
-    #ifdef DEBUG
-    std::cout << "ok 6"<< std::endl;
-    #endif
+    //  fill out uv normal
+    //  -----------------------
     if (objFormat.normal){
         for (unsigned int i = 0; i < normalIndices.size(); i++){
             unsigned int normalIndex = normalIndices[i];
@@ -224,17 +200,16 @@ bool ftloader::OBJ(
         }
     }
 #ifdef DEBUG
-    std::cout << "ok 7"<< std::endl;
     std::cout << "\n\nLoad end. Total Triangle: " << out_vertices.size() << " Total Vertices\n";
     for (int i = 0; i < out_vertices.size(); i++){
         std::cout << "v " << out_vertices[i] << "\tvt " << out_uvs[i] << "\tvn "<< out_normals[i] << std::endl;
     }
-    std::cout << "ok 8"<< std::endl;
 #endif
     file.close();
-    return true;
 }
 
+//  Convert Obj result loader to readable array buffer for opengl
+//  -------------------------------------------------------------
 float* ftloader::OBJTOOPENGLVERTICES(
     unsigned int &out_size,
     const std::vector<ftmath::vec3> &vertices,
@@ -253,10 +228,15 @@ float* ftloader::OBJTOOPENGLVERTICES(
     int pos = 0;
     for (int line = 0; line < out_size; line+=stride)
     {
+        //  each face we color face with another color
+        //  ------------------------------------------
         if(colorVertexIndex % 3 == 0){
             colorIndex = (colorIndex + 1) % 3;
         }
         colorVertexIndex++;
+        
+        //  store value to correct position in vertex buffer
+        //  ------------------------------------------------
         for(int offset = 0; offset < stride; offset++){
                 switch (offset){
                     // vertices
@@ -309,29 +289,39 @@ unsigned char* ftloader::BMP(
     unsigned int dataPos;
     unsigned int imageSize;
 
-    std::ifstream file;
-    file.open(path, std::ios::in | std::ios::binary);
-    if (!file.is_open()){
+    std::ifstream file(path, std::ios::in | std::ios::binary);
+    if (!file){
         std::cerr << "Failed to open BMP texture\n";
         return nullptr;
     }
     file.read(&header[0], 54);
     if(file.gcount() != 54){
         std::cerr << "Not a correct BMP file\n";
+        file.close();
         return nullptr;
     }
     if ( header[0]!='B' || header[1]!='M' ){
-        std::cerr << "ot a correct BMP file\n";
+        std::cerr << "Not a correct BMP file\n";
+        file.close();
         return nullptr;
     }
     dataPos = *(int*)&(header[0x0A]);
     imageSize = *(int*)&(header[0x22]);
     width = *(int*)&(header[0x12]);
     height = *(int*)&(header[0x16]);
-
-    unsigned char* data = new unsigned char[imageSize];
+    if (width != height){
+        std::cerr << "Not a correct BMP file\n";
+        file.close();
+        return nullptr;
+    }
+    if (dataPos != 138){
+        std::cerr << "Not a correct BMP file\n";
+        file.close();
+        return nullptr;
+    }
     if (imageSize == 0) imageSize = width * height * 3;
-    if (dataPos == 0) dataPos = 54;
+    unsigned char* data = new unsigned char[imageSize];
+    int i = 0;
     file.read(reinterpret_cast<char*>(data), imageSize);
     file.close();
     return (data);
