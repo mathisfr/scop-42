@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
+        glfwTerminate();
         return -1;
     }
     glfwSetKeyCallback(window, key_callback);
@@ -112,10 +113,12 @@ int main(int argc, char *argv[])
     unsigned char *data = ftloader::BMP(argv[2], width, height);
     if (data){
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-        delete(data);
+        delete[] data;
     }
     else{
         std::cout << "Failed to load texture" << std::endl;
+        glfwTerminate();
+        return -1;
     }
 
     // Var Menu
@@ -140,18 +143,20 @@ int main(int argc, char *argv[])
     FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
     FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
 
-    Mesh object = Mesh(argv[1], texture, scop42shader, FacesColor);;
-    /*try{
+    Mesh object;
+    try{
         object = Mesh(argv[1], texture, scop42shader, FacesColor);
     }catch(std::exception& e){
         std::cerr << "Sorry we have an error...\n" << e.what();
+        scop42shader.clean();
+        glDeleteTextures(1, &texture);
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
         glfwDestroyWindow(window);
         glfwTerminate();
         return 1;
-    }*/
+    }
 
     // delta time
     // ----------
@@ -315,6 +320,8 @@ int main(int argc, char *argv[])
         glfwPollEvents();
     }
     object.clean();
+    scop42shader.clean();
+    glDeleteTextures(1, &texture);
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

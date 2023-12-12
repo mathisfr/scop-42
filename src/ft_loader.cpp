@@ -218,26 +218,33 @@ float* ftloader::OBJTOOPENGLVERTICES(
     const ftmath::vec3 color[3]
 ){
     if (vertices.size() < 1 || uvs.size() < 1 || normals.size() < 1){
-        return (float*)0;
+        throw ftloader_OBJ_exception();
+        return nullptr;
     }
-    int colorVertexIndex = 0;
     int colorIndex = 0;
     const int stride = 8;
     out_size = vertices.size() * (sizeof(float) * stride);
     float *final_vertices = new float[out_size];
     int pos = 0;
-    for (int line = 0; line < out_size; line+=stride)
+    int loop_max = out_size / 4;
+    for (int line = 0; line < loop_max; line+=stride)
     {
         //  each face we color face with another color
         //  ------------------------------------------
-        if(colorVertexIndex % 3 == 0){
+        if(pos % 3 == 0){
             colorIndex = (colorIndex + 1) % 3;
         }
-        colorVertexIndex++;
         
         //  store value to correct position in vertex buffer
         //  ------------------------------------------------
         for(int offset = 0; offset < stride; offset++){
+                #ifdef DEBUG
+                std::cout << "line + offset = " << line + offset << "\nout_size = " << out_size << std::endl;
+                std::cout << "pos = " << pos << std::endl;
+                std::cout << "vertices.size() = " << vertices.size() << std::endl;
+                std::cout << "uvs.size() = " << vertices.size() << std::endl;
+                std::cout << "color.size() = " << vertices.size() << std::endl;
+                #endif
                 switch (offset){
                     // vertices
                     // --------
@@ -309,11 +316,12 @@ unsigned char* ftloader::BMP(
     imageSize = *(int*)&(header[0x22]);
     width = *(int*)&(header[0x12]);
     height = *(int*)&(header[0x16]);
-    if (width != height){
-        std::cerr << "Not a correct BMP file\n";
-        file.close();
-        return nullptr;
-    }
+    #ifdef DEBUG
+    std::cout << "dataPos: " << dataPos << std::endl;
+    std::cout << "imageSize: " << imageSize << std::endl;
+    std::cout << "datawidthPos: " << width << std::endl;
+    std::cout << "height: " << height << std::endl;
+    #endif
     if (dataPos != 138){
         std::cerr << "Not a correct BMP file\n";
         file.close();

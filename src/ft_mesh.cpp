@@ -4,7 +4,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-Mesh::Mesh(){};
+Mesh::Mesh(){
+    _modelMatrix = ftmath::m4x4(1.0f);
+    _verticesbuffer == nullptr;
+};
 
 Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[3]){
     _modelMatrix = ftmath::m4x4(1.0f);
@@ -19,7 +22,6 @@ Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const
 }
 
 Mesh& Mesh::operator=(const Mesh &other){
-    _modelMatrix = ftmath::m4x4(1.0f);
     _texture = other._texture;
     _shader = other._shader;
     for (int i = 0; i < 3; i++){
@@ -32,7 +34,9 @@ Mesh& Mesh::operator=(const Mesh &other){
 }
 
 void Mesh::clean(){
-    delete(_verticesbuffer);
+    if(_verticesbuffer)
+        delete[] _verticesbuffer;
+    _verticesbuffer = nullptr;
     glDeleteVertexArrays(1, &_VAO);
     glDeleteBuffers(1, &_VBO);
 }
