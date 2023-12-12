@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
     //  global configuration
     //  --------------------
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); 
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     // Shader init
     // -----------
@@ -131,12 +133,15 @@ int main(int argc, char *argv[])
     float rotationX = 0.0f;
     float rotationY = 0.0f;
     float rotationZ = 0.0f;
+    float rotationSpeed = 60.0f;
     float translateX = 0.0f;
     float translateY = 0.0f;
     float translateZ = 0.0f;
     float scaleX = 1.0f;
     float scaleY = 1.0f;
     float scaleZ = 1.0f;
+    float pointAndLineSize = 1.0f;
+    float background_color[3] = { 0.2f, 0.3f, 0.3f };
 
     ftmath::vec3 FacesColor[3];
     FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 0.0f;
@@ -158,19 +163,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // prepare shader option
+    // ---------------------
+    unsigned int viewShader = glGetUniformLocation(scop42shader.ID, "view");
+    unsigned int projectionShader = glGetUniformLocation(scop42shader.ID, "projection");
+    unsigned int pointSizeShader = glGetUniformLocation(scop42shader.ID, "pointSize");
+
     // delta time
     // ----------
     float currentFrame = 0.0f;
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(background_color[0], background_color[1], background_color[2], 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -180,6 +192,7 @@ int main(int argc, char *argv[])
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
 
         // transition between color and texture
         // ------------------------------------
@@ -197,9 +210,11 @@ int main(int argc, char *argv[])
         switch(visual_mode){
             case VM_WIREFRAME:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
+                glLineWidth(pointAndLineSize);
                 break;
             case VM_POINT:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); 
+                glUniform1f(pointSizeShader, pointAndLineSize);
                 break;
             case VM_FILL:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
@@ -221,12 +236,14 @@ int main(int argc, char *argv[])
                 if (!autorotationX) ImGui::SliderFloat("X rotation", &rotationX, -180.0f, 180.0f);
                 if (!autorotationY) ImGui::SliderFloat("Y rotation", &rotationY, -180.0f, 180.0f);
                 if (!autorotationZ) ImGui::SliderFloat("Z rotation", &rotationZ, -180.0f, 180.0f); 
+                ImGui::SliderFloat("Speed", &rotationSpeed, 0.0f, 120.0f);
                 if (ImGui::Button("Reset")){
                     autorotationX = autorotationZ = false;
                     autorotationY = true;
                     rotationX = 0.0f;
                     rotationY = 0.0f;
                     rotationZ = 0.0f;
+                    rotationSpeed = 60.0f;
                 }
                 ImGui::EndMenu();
             }
@@ -263,15 +280,37 @@ int main(int argc, char *argv[])
             ImGui::EndMenuBar();
         }
         if (ImGui::BeginMenuBar()){
-            if (ImGui::BeginMenu("Other"))
+            if (ImGui::BeginMenu("Effect"))
             {
                 ImGui::RadioButton("Wireframe", &visual_mode, VM_WIREFRAME);
                 ImGui::RadioButton("Point", &visual_mode, VM_POINT);
                 ImGui::RadioButton("Fill", &visual_mode, VM_FILL);
+                switch(visual_mode){
+                    case VM_POINT:
+                        ImGui::SliderFloat("Point Size", &pointAndLineSize, 1.0f, 10.0f);
+                        break;
+                    case VM_WIREFRAME:
+                        ImGui::SliderFloat("Line Size", &pointAndLineSize, 1.0f, 10.0f);
+                        break;
+                }
                 ImGui::SliderFloat("Color Mix", &color_mix, 0.0f, 1.0f);
                 if (ImGui::Button("Reset")){
                     visual_mode = VM_FILL;
                     color_mix = 0.0f;
+                    pointAndLineSize = 0.0f;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        if (ImGui::BeginMenuBar()){
+            if (ImGui::BeginMenu("Background"))
+            {
+                ImGui::ColorEdit3("Background Color", background_color);
+                if (ImGui::Button("Reset")){
+                    background_color[0] = 0.2f;
+                    background_color[1] = 0.3f;
+                    background_color[2] = 0.3f;
                 }
                 ImGui::EndMenu();
             }
@@ -283,14 +322,12 @@ int main(int argc, char *argv[])
         //  -----------
         ftmath::m4x4 view(1.0f);
         view = ftmath::translatem4(view, ftmath::vec3(0.0f, 0.0f, 4.0f));
-        unsigned int viewShader = glGetUniformLocation(scop42shader.ID, "view");
         glUniformMatrix4fv(viewShader, 1, GL_FALSE, view.toglsl());
 
         //  projection matrix
         //  -----------------
         // m4x4 persp(float fov, float ratio, float near, float far);
         ftmath::m4x4 projection = ftmath::persp(35.0f, SCR_WIDTH / SCR_HEIGHT, 0.01f, 1000.0f);
-        unsigned int projectionShader = glGetUniformLocation(scop42shader.ID, "projection");
         glUniformMatrix4fv(projectionShader, 1, GL_FALSE, projection.toglsl());
 
         //  model matrix
@@ -298,22 +335,21 @@ int main(int argc, char *argv[])
         object._modelMatrix = ftmath::translatem4(object._modelMatrix, ftmath::vec3(translateX, translateY, translateZ));
         object._modelMatrix = ftmath::scalem4(object._modelMatrix, ftmath::vec3(scaleX, scaleY, scaleZ));
         if (autorotationX){
-            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, (float)glfwGetTime() * 60.0f);
+            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, (float)glfwGetTime() * rotationSpeed);
         }else{
             object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, rotationX);
         }
         if (autorotationY){
-            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, (float)glfwGetTime() * 60.0f);
+            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, (float)glfwGetTime() * rotationSpeed);
         }else{
             object._modelMatrix = ftmath::rotateym4(object._modelMatrix, rotationY);
         }
         if (autorotationZ){
-            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, (float)glfwGetTime() * 60.0f);
+            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, (float)glfwGetTime() * rotationSpeed);
         }else{
             object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, rotationZ);
         }
         object.Draw();
-
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
