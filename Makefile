@@ -9,6 +9,8 @@ IMGUI_OBJETS = $(IMGUI_SRCS:.cpp=.o)
 
 INCLUDE = -Iinclude -Iimgui -Iimgui/backends -Iinclude/glad
 
+all: scop
+
 scop: $(IMGUI_OBJETS) $(OBJETS)
 	g++ -o $@ $^ $(INCLUDE) $(GLFW_FLAGS)
 
@@ -17,3 +19,10 @@ scop: $(IMGUI_OBJETS) $(OBJETS)
 
 %.o: %.c
 	gcc -o $@ -c $< $(INCLUDE)
+
+clean:
+	rm **/*.o
+	rm **/**/*.o
+
+fclean: clean
+	rm scop
