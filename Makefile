@@ -1,17 +1,19 @@
 GLFW_FLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
-SRCS = src/ft_loader.cpp src/ft_math.cpp src/ft_mesh.cpp src/ft_shader.cpp src/glad.c
+SRCS = scop.cpp src/ft_loader.cpp src/ft_math.cpp src/ft_mesh.cpp src/ft_shader.cpp src/glad.c
+OBJETS = $(SRCS:.cpp=.o)
+OBJETS = $(SRCS:.c=.o)
 
-IMGUI_DIR = imgui
-IMGUI_SRCS = $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
-IMGUI_SRCS += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+IMGUI_SRCS = imgui/imgui_draw.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp imgui/imgui.cpp \
+				imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp
+IMGUI_OBJETS = $(IMGUI_SRCS:.cpp=.o)
 
-scop: scop.cpp $(IMGUI_DIR)/imgui.cpp
-	g++ -o $@ $^ $(GLFW_FLAGS) -Iinclude -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends $(SRCS) $(IMGUI_SRCS)
-scop_debug: scop.cpp $(IMGUI_DIR)/imgui.cpp
-	g++ -fsanitize=address -o $@ $^ $(GLFW_FLAGS) -DDEBUG -Iinclude -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends $(SRCS) $(IMGUI_SRCS)
-remake:
-	rm scop
-	make scop
-remaked:
-	rm scopd
-	make scopd
+INCLUDE = -Iinclude -Iimgui -Iimgui/backends -Iinclude/glad
+
+scop: $(IMGUI_OBJETS) $(OBJETS)
+	g++ -o $@ $^ $(INCLUDE) $(GLFW_FLAGS)
+
+%.o: %.cpp
+	g++ -o $@ -c $< $(INCLUDE)
+
+%.o: %.c
+	gcc -o $@ -c $< $(INCLUDE)
