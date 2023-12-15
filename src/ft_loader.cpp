@@ -222,11 +222,12 @@ float* ftloader::OBJTOOPENGLVERTICES(
         return nullptr;
     }
     int colorIndex = 0;
-    const int stride = 8;
+    const int stride = 11;
     out_size = vertices.size() * (sizeof(float) * stride);
     float *final_vertices = new float[out_size];
     int pos = 0;
-    int loop_max = out_size / 4;
+    int loop_max = vertices.size() * stride;
+    std::cout << "lm: " << loop_max << std::endl;
     for (int line = 0; line < loop_max; line+=stride)
     {
         //  each face we color face with another color
@@ -277,6 +278,18 @@ float* ftloader::OBJTOOPENGLVERTICES(
                         break;
                     case 7:
                         final_vertices[line + offset] = color[colorIndex]._z;
+                        break;
+
+                    // normal
+                    // ------
+                    case 8:
+                        final_vertices[line + offset] = normals[colorIndex]._x;
+                        break;
+                    case 9:
+                        final_vertices[line + offset] = normals[colorIndex]._y;
+                        break;
+                    case 10:
+                        final_vertices[line + offset] = normals[colorIndex]._z;
                         break;
                 }
         }

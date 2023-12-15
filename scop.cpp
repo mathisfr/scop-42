@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 3 ){
         std::cout << "You need obj or texture file !\n";
-        return 0;
+        return 1;
     }
 
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        return -1;
+        return 1;
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     else{
         std::cout << "Failed to load texture" << std::endl;
         glfwTerminate();
-        return -1;
+        return 1;
     }
 
     // Var Menu
@@ -148,6 +148,8 @@ int main(int argc, char *argv[])
     FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
     FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
 
+    // mesh loading
+    // ------------
     Mesh object;
     try{
         object = Mesh(argv[1], texture, scop42shader, FacesColor);
@@ -168,6 +170,7 @@ int main(int argc, char *argv[])
     unsigned int viewShader = glGetUniformLocation(scop42shader.ID, "view");
     unsigned int projectionShader = glGetUniformLocation(scop42shader.ID, "projection");
     unsigned int pointSizeShader = glGetUniformLocation(scop42shader.ID, "pointSize");
+    unsigned int mixColorShader = glGetUniformLocation(scop42shader.ID, "mixColor");
 
     // delta time
     // ----------
@@ -193,7 +196,6 @@ int main(int argc, char *argv[])
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-
         // transition between color and texture
         // ------------------------------------
         if(color_mix_transition){
@@ -201,9 +203,7 @@ int main(int argc, char *argv[])
         }else if (!color_mix_transition){
             color_mix = ftmath::lerp<float>(color_mix, 0.0f, deltaTime);
         }
-        unsigned int mixColorShader = glGetUniformLocation(scop42shader.ID, "mixColor");
         glUniform1f(mixColorShader, color_mix);
-
 
         // setup lite visual mode opengl vertex rendering
         //  ---------------------------------------------
