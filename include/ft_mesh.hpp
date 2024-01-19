@@ -11,7 +11,7 @@ typedef struct Vertices {
 class Mesh{
     public:
         Mesh();
-        Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[3]);
+        Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[4]);
 
         void Draw();
         void clean();
@@ -23,7 +23,7 @@ class Mesh{
         unsigned int _texture;
         Shader _shader;
 
-        ftmath::vec3 _color[3];
+        ftmath::vec3 _color[4];
 
         float *_verticesbuffer;
         unsigned int _verticesbuffersize;

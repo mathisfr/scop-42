@@ -144,9 +144,10 @@ int main(int argc, char *argv[])
     float background_color[3] = { 0.2f, 0.3f, 0.3f };
 
     ftmath::vec3 FacesColor[3];
-    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 0.0f;
-    FacesColor[1]._x = 0.0f; FacesColor[1]._y = 1.0f; FacesColor[1]._z = 1.0f;
-    FacesColor[2]._x = 1.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 1.0f;
+    FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 1.0f;
+    FacesColor[1]._x = 0.65f; FacesColor[1]._y = 0.65f; FacesColor[1]._z = 0.65f;
+    FacesColor[2]._x = 0.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 0.0f;
+    FacesColor[3]._x = 0.45f; FacesColor[3]._y = 0.45f; FacesColor[3]._z = 0.45f;
 
     // mesh loading
     // ------------

@@ -9,10 +9,10 @@ Mesh::Mesh(){
     _verticesbuffer == nullptr;
 };
 
-Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[3]){
+Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[4]){
     _modelMatrix = ftmath::m4x4(1.0f);
     _texture = textureId;
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 4; i++){
         _color[i] = color[i];
     }
     _shader = ourShader;
@@ -24,7 +24,7 @@ Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const
 Mesh& Mesh::operator=(const Mesh &other){
     _texture = other._texture;
     _shader = other._shader;
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 4; i++){
         _color[i] = other._color[i];
     }
     _vertices = other._vertices;

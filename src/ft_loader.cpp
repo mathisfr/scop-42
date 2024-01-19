@@ -233,18 +233,18 @@ float* ftloader::OBJTOOPENGLVERTICES(
         //  each face we color face with another color
         //  ------------------------------------------
         if(pos % 3 == 0){
-            colorIndex = (colorIndex + 1) % 3;
+            colorIndex = (colorIndex + 1) % 4;
         }
         
         //  store value to correct position in vertex buffer
         //  ------------------------------------------------
         for(int offset = 0; offset < stride; offset++){
                 #ifdef DEBUG
-                std::cout << "line + offset = " << line + offset << "\nout_size = " << out_size << std::endl;
+                /*std::cout << "line + offset = " << line + offset << "\nout_size = " << out_size << std::endl;
                 std::cout << "pos = " << pos << std::endl;
                 std::cout << "vertices.size() = " << vertices.size() << std::endl;
                 std::cout << "uvs.size() = " << vertices.size() << std::endl;
-                std::cout << "color.size() = " << vertices.size() << std::endl;
+                std::cout << "color.size() = " << vertices.size() << std::endl;*/
                 #endif
                 switch (offset){
                     // vertices
