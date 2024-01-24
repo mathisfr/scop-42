@@ -112,10 +112,10 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int width, height;
-    unsigned char *data = ftloader::BMP(argv[2], width, height);
-    if (data){
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-        delete[] data;
+    std::vector<uint8_t> data = ftloader::BMP(argv[2], width, height);
+    if (!data.empty()){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, (unsigned char*)data.data());
+        //delete[] data;
     }
     else{
         std::cout << "Failed to load texture" << std::endl;

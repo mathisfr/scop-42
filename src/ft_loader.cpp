@@ -300,7 +300,7 @@ float* ftloader::OBJTOOPENGLVERTICES(
 
 //  Load BMP image
 //  -----------------
-unsigned char* ftloader::BMP(
+/*unsigned char* ftloader::BMP(
     const char *path,
     int &width,
     int &height
@@ -346,4 +346,98 @@ unsigned char* ftloader::BMP(
     file.read(reinterpret_cast<char*>(data), imageSize);
     file.close();
     return (data);
+}*/
+
+std::vector<uint8_t> ftloader::BMP(
+    const char *path,
+    int &width,
+    int &height
+){
+    t_bitmapFileHeader bmpFileHeader;
+    t_bitmapInfoHeader bmpInfoHeader;
+    t_bitmapColorHeader bmpColorHeader;
+    std::vector<uint8_t> data;
+
+    std::ifstream bmpFile{path, std::ios_base::binary};
+    if (!bmpFile){
+        data.clear();
+        return data;
+    }
+
+    bmpFile.read((char*)&bmpFileHeader, sizeof(bmpFileHeader));
+    if (bmpFileHeader.Signature != 0x4D42){
+        data.clear();
+        return data;
+    };
+
+    bmpFile.read((char*)&bmpInfoHeader, sizeof(bmpInfoHeader));
+    if(bmpInfoHeader.BitCount == 32){
+        if (bmpInfoHeader.HeaderSize >= (sizeof(s_bitmapInfoHeader) + sizeof(s_bitmapColorHeader))){
+            bmpFile.read((char*)&bmpColorHeader, sizeof(bmpColorHeader));
+            if (!check_color_header(bmpColorHeader)){
+                data.clear();
+                return data;
+            };
+        }else{
+            data.clear();
+            return data;;
+        }
+    }
+
+    bmpFile.seekg(bmpFileHeader.BitsOffset, bmpFile.beg);
+
+    if(bmpInfoHeader.BitCount == 32){
+        bmpInfoHeader.HeaderSize = sizeof(s_bitmapInfoHeader) + sizeof(s_bitmapColorHeader);
+        bmpFileHeader.BitsOffset = sizeof(s_bitmapFileHeader) + sizeof(s_bitmapInfoHeader) + sizeof(s_bitmapColorHeader);
+    }else{
+        bmpInfoHeader.HeaderSize = sizeof(bmpInfoHeader);
+        bmpFileHeader.BitsOffset = sizeof(s_bitmapFileHeader) + sizeof(s_bitmapInfoHeader);
+    }
+    bmpFileHeader.Size = bmpFileHeader.BitsOffset;
+
+    if (bmpInfoHeader.Height < 0){
+        data.clear();
+        return data;
+    };
+
+    data.resize(bmpInfoHeader.Width * bmpInfoHeader.Height * bmpInfoHeader.BitCount / 8);
+
+    if (bmpInfoHeader.Width % 4 == 0){
+        bmpFile.read((char*)data.data(), data.size());
+        bmpFileHeader.Size += data.size();
+    }else{
+        uint32_t row_stride = bmpInfoHeader.Width * bmpInfoHeader.BitCount / 8;
+        uint32_t new_stride = make_stride_aligned(4, row_stride);
+        std::vector<uint8_t> padding_row(new_stride - row_stride);
+        for (int y = 0; y < bmpInfoHeader.Height; ++y){
+            bmpFile.read((char*)(data.data() + row_stride * y), row_stride);
+            bmpFile.read((char*)padding_row.data(), padding_row.size());
+        }
+        bmpFileHeader.Size += data.size() + bmpInfoHeader.Height * padding_row.size();
+    }
+    width = bmpInfoHeader.Width;
+    height = bmpInfoHeader.Height;
+    return data;
+}
+
+uint32_t ftloader::make_stride_aligned(uint32_t align_stride, const uint32_t &row_stride) {
+    uint32_t new_stride = row_stride;
+    while (new_stride % align_stride != 0) {
+        new_stride++;
+    }
+    return new_stride;
+}
+
+bool ftloader::check_color_header(s_bitmapColorHeader &bmp_color_header) {
+    s_bitmapColorHeader expected_color_header;
+    if(expected_color_header.RedMask != bmp_color_header.RedMask ||
+        expected_color_header.BlueMask != bmp_color_header.BlueMask ||
+        expected_color_header.GreenMask != bmp_color_header.GreenMask ||
+        expected_color_header.AlphaMask != bmp_color_header.AlphaMask) {
+        return false;
+    }
+    if(expected_color_header.CsType != bmp_color_header.CsType) {
+        return false;
+    }
+    return true;
 }
