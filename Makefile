@@ -23,6 +23,17 @@ scop_debug: $(IMGUI_OBJETS) $(OBJETS)
 %.o: %.c
 	gcc -o $@ -c $< $(INCLUDE)
 
+zip:
+	zip -r textures.zip ./textures/*.bmp
+	zip -r models.zip ./models/*.obj
+	rm -r textures
+	rm -r models
+
+unzip:
+	unzip textures.zip
+	unzip models.zip
+	rm *.zip
+
 clean:
 	rm **/*.o
 	rm **/**/*.o

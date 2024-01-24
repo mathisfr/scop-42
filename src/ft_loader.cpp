@@ -227,7 +227,6 @@ float* ftloader::OBJTOOPENGLVERTICES(
     float *final_vertices = new float[out_size];
     int pos = 0;
     int loop_max = vertices.size() * stride;
-    std::cout << "lm: " << loop_max << std::endl;
     for (int line = 0; line < loop_max; line+=stride)
     {
         //  each face we color face with another color

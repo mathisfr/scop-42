@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Scop - 42", NULL, NULL);
     if (window == NULL)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return 1;
     }
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        std::cerr << "Failed to initialize GLAD" << std::endl;
         glfwTerminate();
         return -1;
     }
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
         //delete[] data;
     }
     else{
-        std::cout << "Failed to load texture" << std::endl;
+        std::cerr << "Failed to load texture" << std::endl;
         glfwTerminate();
         return 1;
     }
@@ -268,9 +268,9 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Scale"))
             {
-                ImGui::SliderFloat("X scale", &scaleX, -5.0f, 5.0f);
-                ImGui::SliderFloat("Y scale", &scaleY, -5.0f, 5.0f);
-                ImGui::SliderFloat("Z scale", &scaleZ, -5.0f, 5.0f);
+                ImGui::SliderFloat("X scale", &scaleX, 0.01f, 2.0f);
+                ImGui::SliderFloat("Y scale", &scaleY, 0.01f, 2.0f);
+                ImGui::SliderFloat("Z scale", &scaleZ, 0.01f, 2.0f);
                 if (ImGui::Button("Reset")){
                     scaleX = 1.0f;
                     scaleY = 1.0f;
@@ -373,7 +373,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_E && action == GLFW_PRESS){
         color_mix_transition = !color_mix_transition;
-        std::cout << color_mix_transition << std::endl;
     }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
