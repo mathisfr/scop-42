@@ -9,6 +9,13 @@ Mesh::Mesh(){
     _verticesbuffer == nullptr;
 };
 
+Mesh::~Mesh(){
+    if (_verticesbuffer){
+        delete[] _verticesbuffer;
+    }
+    _verticesbuffer = nullptr;
+}
+
 Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[4]){
     _modelMatrix = ftmath::m4x4(1.0f);
     _texture = textureId;

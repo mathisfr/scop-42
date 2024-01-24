@@ -12,6 +12,7 @@ class Mesh{
     public:
         Mesh();
         Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const ftmath::vec3 color[4]);
+        ~Mesh();
 
         void Draw();
         void clean();
