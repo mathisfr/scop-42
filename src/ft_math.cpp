@@ -2,6 +2,13 @@
 #include <iomanip>  
 using namespace ftmath;
 
+/*
+*   /!\
+*   I'm not a mathematician, my math level isn't sufficient for the exercise.
+*   So there are probably still some errors.
+*   But this code is enough to run my program for the moment.
+*/
+
 //  class vec4
 //  ----------
 vec4::vec4(){
@@ -180,9 +187,6 @@ std::ostream& operator<<(std::ostream& os, const ftmath::m4x4& m){
 }
 
 //  Function Translate, scale and rotate
-//  ------------------------------------
-//  Erreur de calcule translatem4 !
-//  ------------------------------------
 m4x4 ftmath::translatem4(m4x4 m, vec3 v){   
     m4x4 retm(1.0f);
     retm._m3._x = v._x;
@@ -190,21 +194,19 @@ m4x4 ftmath::translatem4(m4x4 m, vec3 v){
     retm._m3._z = v._z;
     return m * retm;
 }
-//  ------------------------------------
-//  Erreur de calcule scalem4 !
-//  ------------------------------------
+
 m4x4 ftmath:: scalem4(m4x4 m, vec3 v){
     m4x4 retm(1.0f);
-    retm._m0._x *= v._x;
-    retm._m1._y *= v._y;
-    retm._m2._z *= v._z;
+    retm._m0._x = v._x;
+    retm._m1._y = v._y;
+    retm._m2._z = v._z;
     return m * retm;  
 }
 m4x4 ftmath::rotatexm4(m4x4 m, float angle){
     m4x4 retm(1.0f);
-    float radian = angle * (M_PI / 180);
-    float c = cos(radian);
-    float s = sin(radian);
+    const float radian = angle * (M_PI / 180);
+    const float c = cos(radian);
+    const float s = sin(radian);
 
     vec4 tmpm1( c * retm._m1._x - s * retm._m2._x, 
                 c * retm._m1._y - s * retm._m2._y,
@@ -222,9 +224,9 @@ m4x4 ftmath::rotatexm4(m4x4 m, float angle){
 };
 m4x4 ftmath::rotateym4(m4x4 m, float angle){
     m4x4 retm(1.0f);
-    float radian = angle * (M_PI / 180);
-    float c = cos(radian);
-    float s = sin(radian);
+    const float radian = angle * (M_PI / 180);
+    const float c = cos(radian);
+    const float s = sin(radian);
 
     vec4 tmpm0( c * retm._m0._x + s * retm._m2._x, 
                 c * retm._m0._y + s * retm._m2._y,
@@ -242,9 +244,9 @@ m4x4 ftmath::rotateym4(m4x4 m, float angle){
 };
 m4x4 ftmath::rotatezm4(m4x4 m, float angle){
     m4x4 retm(1.0f);
-    float radian = angle * (M_PI / 180);
-    float c = cos(radian);
-    float s = sin(radian);
+    const float radian = angle * (M_PI / 180);
+    const float c = cos(radian);
+    const float s = sin(radian);
 
     vec4 tmpm0( c * retm._m0._x - s * retm._m1._x, 
                 c * retm._m0._y - s * retm._m1._y,
@@ -265,12 +267,12 @@ m4x4 ftmath::rotatezm4(m4x4 m, float angle){
 //  -----------------
 m4x4 ftmath::persp(float fov, float ratio, float near, float far){
     const float zRange = near - far;
-    const float tanHalfFOV = tanf((fov / 2.0f) * (180.0f/(float)M_PI));
+    const float tanHalfFOV = tanf((fov / 2.0f) * ((float)M_PI)/180.0f);
     m4x4 matrix;
     matrix._m0._x = 1.0f / (tanHalfFOV * ratio);
     matrix._m1._y = 1.0f / tanHalfFOV;
-    matrix._m2._z = (-near - far) / zRange;
-    matrix._m2._w = 1.0f;
+    matrix._m2._z = (near + far) / zRange;
+    matrix._m2._w = -1.0f;
     matrix._m3._z = (2.0f * (far * near)) / zRange;
     return matrix;
 }

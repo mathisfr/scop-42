@@ -16,7 +16,7 @@ out vec3 Normal;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
     gl_PointSize = pointSize * (10.0 / length(gl_Position.xyz));
     TexCoord = aTexCoord;
     Color = aColor;

@@ -322,13 +322,13 @@ int main(int argc, char *argv[])
         //  view matrix
         //  -----------
         ftmath::m4x4 view(1.0f);
-        view = ftmath::translatem4(view, ftmath::vec3(0.0f, 0.0f, 4.0f));
+        view = ftmath::translatem4(view, ftmath::vec3(0.0f, 0.0f, -10.0f));
         glUniformMatrix4fv(viewShader, 1, GL_FALSE, view.toglsl());
 
         //  projection matrix
         //  -----------------
         // m4x4 persp(float fov, float ratio, float near, float far);
-        ftmath::m4x4 projection = ftmath::persp(35.0f, SCR_WIDTH / SCR_HEIGHT, 0.01f, 1000.0f);
+        ftmath::m4x4 projection = ftmath::persp(45.0f, SCR_WIDTH / SCR_HEIGHT, 0.01f, 1000.0f);
         glUniformMatrix4fv(projectionShader, 1, GL_FALSE, projection.toglsl());
 
         //  model matrix
