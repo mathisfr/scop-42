@@ -215,7 +215,7 @@ float* ftloader::OBJTOOPENGLVERTICES(
     const std::vector<ftmath::vec3> &vertices,
     const std::vector<ftmath::vec2> &uvs,
     const std::vector<ftmath::vec3> &normals,
-    const ftmath::vec3 color[3]
+    const ftmath::vec3 color[4]
 ){
     if (vertices.size() < 1 || uvs.size() < 1 || normals.size() < 1){
         throw ftloader_OBJ_exception();

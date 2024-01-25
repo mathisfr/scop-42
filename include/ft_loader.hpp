@@ -51,7 +51,7 @@ namespace ftloader{
             const std::vector<ftmath::vec3> &in_vertices,
             const std::vector<ftmath::vec2> &in_uvs,
             const std::vector<ftmath::vec3> &in_normals,
-            const ftmath::vec3 color[3]
+            const ftmath::vec3 color[4]
         );
         std::vector<uint8_t> BMP(
             const char *in_path,
