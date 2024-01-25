@@ -8,6 +8,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
     // ensure ifstream objects can throw exceptions:
+    // failbit:	Logical error on i/o operation
+    // badbit:	Read/writing error on i/o operation
     vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     try 
