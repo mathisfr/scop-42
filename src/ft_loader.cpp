@@ -419,7 +419,7 @@ std::vector<uint8_t> ftloader::BMP(
     return data;
 }
 
-uint32_t ftloader::make_stride_aligned(uint32_t align_stride, const uint32_t &row_stride) {
+static uint32_t ftloader::make_stride_aligned(uint32_t align_stride, const uint32_t &row_stride) {
     uint32_t new_stride = row_stride;
     while (new_stride % align_stride != 0) {
         new_stride++;
@@ -427,7 +427,7 @@ uint32_t ftloader::make_stride_aligned(uint32_t align_stride, const uint32_t &ro
     return new_stride;
 }
 
-bool ftloader::check_color_header(s_bitmapColorHeader &bmp_color_header) {
+static bool ftloader::check_color_header(s_bitmapColorHeader &bmp_color_header) {
     s_bitmapColorHeader expected_color_header;
     if(expected_color_header.RedMask != bmp_color_header.RedMask ||
         expected_color_header.BlueMask != bmp_color_header.BlueMask ||

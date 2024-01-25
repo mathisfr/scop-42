@@ -58,8 +58,8 @@ namespace ftloader{
             int &out_width,
             int &out_height
         );
-        uint32_t make_stride_aligned(uint32_t align_stride, const uint32_t &row_stride);
-        bool check_color_header(s_bitmapColorHeader &bmp_color_header);
+        static uint32_t make_stride_aligned(uint32_t align_stride, const uint32_t &row_stride);
+        static bool check_color_header(s_bitmapColorHeader &bmp_color_header);
 }
 
 class ftloader_OBJ_exception: public std::exception
