@@ -27,22 +27,22 @@ scop_debug: $(IMGUI_OBJETS) $(OBJETS)
 zip: models textures
 	zip -r textures.zip ./textures/*.bmp
 	zip -r models.zip ./models/*.obj
-	rm -r textures || true
-	rm -r models || true
+	rm -rf textures
+	rm -rf models
 
 unzip:
 	unzip textures.zip
 	unzip models.zip
-	rm *.zip || true
+	rm -f *.zip
 
 clean:
-	rm imgui.ini || true
-	rm *.o || true
-	rm **/*.o || true
-	rm **/**/*.o || true
+	rm -f imgui.ini
+	rm -f *.o
+	rm -f **/*.o
+	rm -f **/**/*.o
 
 fclean: clean
-	rm scop || true
-	rm scop_debug || true
+	rm -f scop
+	rm -f scop_debug
 
 re: fclean scop
