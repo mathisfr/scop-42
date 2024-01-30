@@ -14,13 +14,13 @@
 #include "ft_mesh.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-bool color_mix_transition = false;
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
 
 // settings
-const unsigned int SCR_WIDTH = 800.0f;
-const unsigned int SCR_HEIGHT = 600.0f;
-
-float visibility = 0.0f;
+unsigned int SCR_WIDTH = 800.0f;
+unsigned int SCR_HEIGHT = 600.0f;
 
 // visual mode for render obj
 // --------------------------
@@ -30,7 +30,37 @@ enum VISUAL_MODE{
     VM_FILL
 };
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+typedef struct DeltaTime{
+    float currentFrame;
+    float deltaTime;
+    float lastFrame;
+} DeltaTime;
+DeltaTime dt;
+
+//  command struct
+//  --------------
+typedef struct Command{
+    float color_mix;
+    int visual_mode;
+    bool autorotationX;
+    bool autorotationY;
+    bool autorotationZ;
+    float rotationSpeed;
+    float translateX;
+    float translateY;
+    float translateZ;
+    float rotationX;
+    float rotationY;
+    float rotationZ;
+    float scaleX;
+    float scaleY;
+    float scaleZ;
+    bool color_mix_transition;
+    float visibility;
+    float pointAndLineSize;
+    float background_color[3];
+} Command;
+Command cmd;
 
 int main(int argc, char *argv[])
 {
@@ -45,6 +75,7 @@ int main(int argc, char *argv[])
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -63,6 +94,10 @@ int main(int argc, char *argv[])
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // hook user input
+    glfwSetWindowSizeLimits(window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowAspectRatio(window, 4, 3);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -72,15 +107,11 @@ int main(int argc, char *argv[])
         glfwTerminate();
         return -1;
     }
-    glfwSetKeyCallback(window, key_callback);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
@@ -125,25 +156,27 @@ int main(int argc, char *argv[])
 
     // Var Menu
     // --------
-    float color_mix = 0.0f;
-    int visual_mode = VM_FILL;
-    bool autorotationX = false;
-    bool autorotationY = true;
-    bool autorotationZ = false;
-    float rotationX = 0.0f;
-    float rotationY = 0.0f;
-    float rotationZ = 0.0f;
-    float rotationSpeed = 60.0f;
-    float translateX = 0.0f;
-    float translateY = 0.0f;
-    float translateZ = 0.0f;
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
-    float scaleZ = 1.0f;
-    float pointAndLineSize = 1.0f;
-    float background_color[3] = { 0.2f, 0.3f, 0.3f };
+    cmd.color_mix = 0.0f;
+    cmd.visual_mode = VM_FILL;
+    cmd.autorotationX = false;
+    cmd.autorotationY = true;
+    cmd.autorotationZ = false;
+    cmd.rotationX = 0.0f;
+    cmd.rotationY = 0.0f;
+    cmd.rotationZ = 0.0f;
+    cmd.rotationSpeed = 60.0f;
+    cmd.scaleX = 1.0f;
+    cmd.scaleY = 1.0f;
+    cmd.scaleZ = 1.0f;
+    cmd.translateX = 0.0f;
+    cmd.translateY = 0.0f;
+    cmd.translateZ = 0.0f;
+    cmd.pointAndLineSize = 1.0f;
+    cmd.background_color[0] = 0.2f;
+    cmd.background_color[1] = 0.3f;
+    cmd.background_color[2] = 0.3f;
 
-    ftmath::vec3 FacesColor[3];
+    ftmath::vec3 FacesColor[4];
     FacesColor[0]._x = 1.0f; FacesColor[0]._y = 1.0f; FacesColor[0]._z = 1.0f;
     FacesColor[1]._x = 0.65f; FacesColor[1]._y = 0.65f; FacesColor[1]._z = 0.65f;
     FacesColor[2]._x = 0.0f; FacesColor[2]._y = 0.0f; FacesColor[2]._z = 0.0f;
@@ -165,6 +198,7 @@ int main(int argc, char *argv[])
         glfwTerminate();
         return 1;
     }
+    const ftmath::vec3 objectCenter = object.getCenter();
 
     // prepare shader option
     // ---------------------
@@ -175,9 +209,9 @@ int main(int argc, char *argv[])
 
     // delta time
     // ----------
-    float currentFrame = 0.0f;
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
+    dt.currentFrame = 0.0f;
+    dt.deltaTime = 0.0f;
+    dt.lastFrame = 0.0f;
 
     // render loop
     // -----------
@@ -185,7 +219,7 @@ int main(int argc, char *argv[])
     {
         // render
         // ------
-        glClearColor(background_color[0], background_color[1], background_color[2], 1.0f);
+        glClearColor(cmd.background_color[0], cmd.background_color[1], cmd.background_color[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -193,29 +227,29 @@ int main(int argc, char *argv[])
 
         // delta time
         // ----------
-        currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        dt.currentFrame = glfwGetTime();
+        dt.deltaTime = dt.currentFrame - dt.lastFrame;
+        dt.lastFrame = dt.currentFrame;
 
         // transition between color and texture
         // ------------------------------------
-        if(color_mix_transition){
-            color_mix = ftmath::lerp<float>(color_mix, 1.0f, deltaTime);
-        }else if (!color_mix_transition){
-            color_mix = ftmath::lerp<float>(color_mix, 0.0f, deltaTime);
+        if(cmd.color_mix_transition){
+            cmd.color_mix = ftmath::lerp<float>(cmd.color_mix, 1.0f, dt.deltaTime);
+        }else if (!cmd.color_mix_transition){
+            cmd.color_mix = ftmath::lerp<float>(cmd.color_mix, 0.0f, dt.deltaTime);
         }
-        glUniform1f(mixColorShader, color_mix);
+        glUniform1f(mixColorShader, cmd.color_mix);
 
         // setup lite visual mode opengl vertex rendering
         //  ---------------------------------------------
-        switch(visual_mode){
+        switch(cmd.visual_mode){
             case VM_WIREFRAME:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
-                glLineWidth(pointAndLineSize);
+                glLineWidth(cmd.pointAndLineSize);
                 break;
             case VM_POINT:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); 
-                glUniform1f(pointSizeShader, pointAndLineSize);
+                glUniform1f(pointSizeShader, cmd.pointAndLineSize);
                 break;
             case VM_FILL:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
@@ -231,20 +265,20 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Rotation"))
             {
-                ImGui::Checkbox("Auto X rotation", &autorotationX);
-                ImGui::Checkbox("Auto Y rotation", &autorotationY); 
-                ImGui::Checkbox("Auto Z rotation", &autorotationZ); 
-                if (!autorotationX) ImGui::SliderFloat("X rotation", &rotationX, -180.0f, 180.0f);
-                if (!autorotationY) ImGui::SliderFloat("Y rotation", &rotationY, -180.0f, 180.0f);
-                if (!autorotationZ) ImGui::SliderFloat("Z rotation", &rotationZ, -180.0f, 180.0f); 
-                ImGui::SliderFloat("Speed", &rotationSpeed, 0.0f, 120.0f);
+                ImGui::Checkbox("Auto X rotation", &cmd.autorotationX);
+                ImGui::Checkbox("Auto Y rotation", &cmd.autorotationY); 
+                ImGui::Checkbox("Auto Z rotation", &cmd.autorotationZ); 
+                if (!cmd.autorotationX) ImGui::SliderFloat("X rotation", &cmd.rotationX, -180.0f, 180.0f);
+                if (!cmd.autorotationY) ImGui::SliderFloat("Y rotation", &cmd.rotationY, -180.0f, 180.0f);
+                if (!cmd.autorotationZ) ImGui::SliderFloat("Z rotation", &cmd.rotationZ, -180.0f, 180.0f); 
+                ImGui::SliderFloat("Speed", &cmd.rotationSpeed, 0.0f, 120.0f);
                 if (ImGui::Button("Reset")){
-                    autorotationX = autorotationZ = false;
-                    autorotationY = true;
-                    rotationX = 0.0f;
-                    rotationY = 0.0f;
-                    rotationZ = 0.0f;
-                    rotationSpeed = 60.0f;
+                    cmd.autorotationX = cmd.autorotationZ = false;
+                    cmd.autorotationY = true;
+                    cmd.rotationX = 0.0f;
+                    cmd.rotationY = 0.0f;
+                    cmd.rotationZ = 0.0f;
+                    cmd.rotationSpeed = 60.0f;
                 }
                 ImGui::EndMenu();
             }
@@ -253,13 +287,13 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Translate"))
             {
-                ImGui::SliderFloat("X translate", &translateX, -10.0f, 10.0f);
-                ImGui::SliderFloat("Y translate", &translateY, -10.0f, 10.0f);
-                ImGui::SliderFloat("Z translate", &translateZ, -10.0f, 10.0f);
+                ImGui::SliderFloat("X translate", &cmd.translateX, -10.0f, 10.0f);
+                ImGui::SliderFloat("Y translate", &cmd.translateY, -10.0f, 10.0f);
+                ImGui::SliderFloat("Z translate", &cmd.translateZ, -10.0f, 10.0f);
                 if (ImGui::Button("Reset")){
-                    translateX = 0.0f;
-                    translateY = 0.0f;
-                    translateZ = 0.0f;
+                    cmd.translateX = 0.0f;
+                    cmd.translateY = 0.0f;
+                    cmd.translateZ = 0.0f;
                 }
                 ImGui::EndMenu();
             }
@@ -268,13 +302,13 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Scale"))
             {
-                ImGui::SliderFloat("X scale", &scaleX, 0.01f, 2.0f);
-                ImGui::SliderFloat("Y scale", &scaleY, 0.01f, 2.0f);
-                ImGui::SliderFloat("Z scale", &scaleZ, 0.01f, 2.0f);
+                ImGui::SliderFloat("X scale", &cmd.scaleX, 0.01f, 2.0f);
+                ImGui::SliderFloat("Y scale", &cmd.scaleY, 0.01f, 2.0f);
+                ImGui::SliderFloat("Z scale", &cmd.scaleZ, 0.01f, 2.0f);
                 if (ImGui::Button("Reset")){
-                    scaleX = 1.0f;
-                    scaleY = 1.0f;
-                    scaleZ = 1.0f;
+                    cmd.scaleX = 1.0f;
+                    cmd.scaleY = 1.0f;
+                    cmd.scaleZ = 1.0f;
                 }
                 ImGui::EndMenu();
             }
@@ -283,22 +317,22 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Effect"))
             {
-                ImGui::RadioButton("Wireframe", &visual_mode, VM_WIREFRAME);
-                ImGui::RadioButton("Point", &visual_mode, VM_POINT);
-                ImGui::RadioButton("Fill", &visual_mode, VM_FILL);
-                switch(visual_mode){
+                ImGui::RadioButton("Wireframe", &cmd.visual_mode, VM_WIREFRAME);
+                ImGui::RadioButton("Point", &cmd.visual_mode, VM_POINT);
+                ImGui::RadioButton("Fill", &cmd.visual_mode, VM_FILL);
+                switch(cmd.visual_mode){
                     case VM_POINT:
-                        ImGui::SliderFloat("Point Size", &pointAndLineSize, 1.0f, 10.0f);
+                        ImGui::SliderFloat("Point Size", &cmd.pointAndLineSize, 1.0f, 10.0f);
                         break;
                     case VM_WIREFRAME:
-                        ImGui::SliderFloat("Line Size", &pointAndLineSize, 1.0f, 10.0f);
+                        ImGui::SliderFloat("Line Size", &cmd.pointAndLineSize, 1.0f, 10.0f);
                         break;
                 }
-                ImGui::SliderFloat("Color Mix", &color_mix, 0.0f, 1.0f);
+                ImGui::SliderFloat("Color Mix", &cmd.color_mix, 0.0f, 1.0f);
                 if (ImGui::Button("Reset")){
-                    visual_mode = VM_FILL;
-                    color_mix = 0.0f;
-                    pointAndLineSize = 0.0f;
+                    cmd.visual_mode = VM_FILL;
+                    cmd.color_mix = 0.0f;
+                    cmd.pointAndLineSize = 0.0f;
                 }
                 ImGui::EndMenu();
             }
@@ -307,11 +341,11 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Background"))
             {
-                ImGui::ColorEdit3("Background Color", background_color);
+                ImGui::ColorEdit3("Background Color", cmd.background_color);
                 if (ImGui::Button("Reset")){
-                    background_color[0] = 0.2f;
-                    background_color[1] = 0.3f;
-                    background_color[2] = 0.3f;
+                    cmd.background_color[0] = 0.2f;
+                    cmd.background_color[1] = 0.3f;
+                    cmd.background_color[2] = 0.3f;
                 }
                 ImGui::EndMenu();
             }
@@ -333,23 +367,24 @@ int main(int argc, char *argv[])
 
         //  model matrix
         //  ------------
-        object._modelMatrix = ftmath::translatem4(object._modelMatrix, ftmath::vec3(translateX, translateY, translateZ));
-        object._modelMatrix = ftmath::scalem4(object._modelMatrix, ftmath::vec3(scaleX, scaleY, scaleZ));
-        if (autorotationX){
-            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, (float)glfwGetTime() * rotationSpeed);
+        object._modelMatrix = ftmath::translatem4(object._modelMatrix, ftmath::vec3(cmd.translateX - objectCenter._x, cmd.translateY - objectCenter._y, cmd.translateZ - objectCenter._z));
+        if (cmd.autorotationX){
+            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, (float)glfwGetTime() * cmd.rotationSpeed);
         }else{
-            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, rotationX);
+            object._modelMatrix = ftmath::rotatexm4(object._modelMatrix, cmd.rotationX);
         }
-        if (autorotationY){
-            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, (float)glfwGetTime() * rotationSpeed);
+        if (cmd.autorotationY){
+            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, (float)glfwGetTime() * cmd.rotationSpeed);
         }else{
-            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, rotationY);
+            object._modelMatrix = ftmath::rotateym4(object._modelMatrix, cmd.rotationY);
         }
-        if (autorotationZ){
-            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, (float)glfwGetTime() * rotationSpeed);
+        if (cmd.autorotationZ){
+            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, (float)glfwGetTime() * cmd.rotationSpeed);
         }else{
-            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, rotationZ);
+            object._modelMatrix = ftmath::rotatezm4(object._modelMatrix, cmd.rotationZ);
         }
+        object._modelMatrix = ftmath::scalem4(object._modelMatrix, ftmath::vec3(cmd.scaleX, cmd.scaleY, cmd.scaleZ));
+        object._modelMatrix = ftmath::translatem4(object._modelMatrix, ftmath::vec3(-objectCenter._x, -objectCenter._y, -objectCenter._z));
         object.Draw();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -371,17 +406,77 @@ int main(int argc, char *argv[])
 //  ---------------
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_E && action == GLFW_PRESS){
-        color_mix_transition = !color_mix_transition;
+    //  texture to color
+    //  ----------------
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS){
+        cmd.color_mix_transition = !cmd.color_mix_transition;
     }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
+
+    //  translation
+    //  -----------
+    const float max = 200.0f;
+    const float min = -max;
+    const float step = 5.0f;
+    if (key == GLFW_KEY_W && action == GLFW_REPEAT){
+        cmd.translateZ -= step * dt.deltaTime;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_REPEAT){
+        cmd.translateZ += step * dt.deltaTime;
+    }
+    if (key == GLFW_KEY_A && action == GLFW_REPEAT){
+        cmd.translateX -= step * dt.deltaTime;
+    }
+    if (key == GLFW_KEY_D && action == GLFW_REPEAT){
+        cmd.translateX += step * dt.deltaTime;
+    }
+    if (key == GLFW_KEY_Q && action == GLFW_REPEAT){
+        cmd.translateY -= step * dt.deltaTime;
+    }
+    if (key == GLFW_KEY_E && action == GLFW_REPEAT){
+        cmd.translateY += step * dt.deltaTime;
+    }
+
+    if (cmd.translateX > max) cmd.translateX = max;
+    if (cmd.translateY > max) cmd.translateY = max;
+    if (cmd.translateZ > max) cmd.translateZ = max;
+    if (cmd.translateX < min) cmd.translateX = min;
+    if (cmd.translateY < min) cmd.translateY = min;
+    if (cmd.translateZ < min) cmd.translateZ = min;
 }
+
+//  scroll callback
+//  ---------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    const float min = 0.010f;
+    const float max = 20.0f;
+    const float step = 5.0f;
+    if (yoffset == 1){
+        cmd.scaleX += step * dt.deltaTime;
+        cmd.scaleY += step * dt.deltaTime;
+        cmd.scaleZ += step * dt.deltaTime;
+    }else if (yoffset == -1){
+        cmd.scaleX -= step * dt.deltaTime;
+        cmd.scaleY -= step * dt.deltaTime;
+        cmd.scaleZ -= step * dt.deltaTime;
+    }
+    if (cmd.scaleX < min) cmd.scaleX = min;
+    if (cmd.scaleY < min) cmd.scaleY = min;
+    if (cmd.scaleZ < min) cmd.scaleZ = min;
+    if (cmd.scaleX > max) cmd.scaleX = max;
+    if (cmd.scaleY > max) cmd.scaleY = max;
+    if (cmd.scaleZ > max) cmd.scaleZ = max;
+}
+
 
 //  hook when user rezie the window
 //  -------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    SCR_HEIGHT = height;
+    SCR_WIDTH = width;
     glViewport(0, 0, width, height);
 }

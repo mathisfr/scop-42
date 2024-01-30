@@ -8,6 +8,7 @@ typedef struct Vertices {
     std::vector<ftmath::vec2> TexCoords;
     std::vector<ftmath::vec3> Normal;
 } Vertices;
+
 class Mesh{
     public:
         Mesh();
@@ -15,11 +16,14 @@ class Mesh{
         ~Mesh();
 
         void Draw();
+        ftmath::vec3 getCenter();
+        const BoundBox getBoundBox() const;
         void clean();
         Mesh& operator=(const Mesh &other);
         ftmath::m4x4 _modelMatrix;
     private:
         Vertices _vertices;
+        BoundBox _boundBox;
 
         unsigned int _texture;
         Shader _shader;

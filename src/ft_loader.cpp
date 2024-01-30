@@ -22,7 +22,8 @@ void ftloader::OBJ(
             const char *path,
             std::vector<ftmath::vec3> &out_vertices,
             std::vector<ftmath::vec2> &out_uvs,
-            std::vector<ftmath::vec3> &out_normals)
+            std::vector<ftmath::vec3> &out_normals,
+            BoundBox &boundBox)
 {
     std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
     std::vector<ftmath::vec3> temp_vertices;
@@ -132,24 +133,24 @@ void ftloader::OBJ(
                     ss_param_convert[i].str(in_param[(i+2)%4]);
                 }
                 for (unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
-                unsigned int index = 0;
-                while (getline(ss_param_convert[i], out_param, '/')
-                    || ((!objFormat.vertex && !objFormat.uv) && getline(ss_param_convert[i], out_param, '\n'))){
-                    switch(index)
-                    {
-                        case 0:
-                            vertexIndices.push_back(std::stoul(out_param));
-                            break;
-                        case 1:
-                            uvIndices.push_back(std::stoul(out_param));
-                            break;
-                        case 2:
-                            normalIndices.push_back(std::stoul(out_param));
-                            break;
+                    unsigned int index = 0;
+                    while (getline(ss_param_convert[i], out_param, '/')
+                        || ((!objFormat.vertex && !objFormat.uv) && getline(ss_param_convert[i], out_param, '\n'))){
+                        switch(index)
+                        {
+                            case 0:
+                                vertexIndices.push_back(std::stoul(out_param));
+                                break;
+                            case 1:
+                                uvIndices.push_back(std::stoul(out_param));
+                                break;
+                            case 2:
+                                normalIndices.push_back(std::stoul(out_param));
+                                break;
+                        }
+                        index++;
                     }
-                    index++;
                 }
-            }
             }
         }
     }
@@ -165,9 +166,21 @@ void ftloader::OBJ(
     }
     //  fill out vertices array
     //  -----------------------
+    boundBox.maxBoundBox._x = temp_vertices[0]._x; // Max  x, y and z
+    boundBox.maxBoundBox._y = temp_vertices[0]._y; // 
+    boundBox.maxBoundBox._z = temp_vertices[0]._z; // 
+    boundBox.minBoundBox._x = temp_vertices[0]._x; // Min  x, y and z
+    boundBox.minBoundBox._y = temp_vertices[0]._y; // 
+    boundBox.minBoundBox._z = temp_vertices[0]._z; // 
     for (unsigned int i = 0; i < vertexIndices.size(); i++){
         unsigned int vertexIndex = vertexIndices[i];
         ftmath::vec3 vertex = temp_vertices[vertexIndex - 1];
+        if (vertex._x > boundBox.maxBoundBox._x) boundBox.maxBoundBox._x = vertex._x;
+        if (vertex._y > boundBox.maxBoundBox._y) boundBox.maxBoundBox._y = vertex._y;
+        if (vertex._z > boundBox.maxBoundBox._z) boundBox.maxBoundBox._z = vertex._z;
+        if (vertex._x < boundBox.minBoundBox._x) boundBox.minBoundBox._x = vertex._x;
+        if (vertex._y < boundBox.minBoundBox._y) boundBox.minBoundBox._y = vertex._y;
+        if (vertex._z < boundBox.minBoundBox._z) boundBox.minBoundBox._z = vertex._z;
         out_vertices.push_back(vertex);
     }
     //  fill out uv array
@@ -181,8 +194,9 @@ void ftloader::OBJ(
     }else{
         for (unsigned int i = 0; i < vertexIndices.size(); i++){
             ftmath::vec2 uv;
-            uv._x = out_vertices[i]._z;
-            uv._y = out_vertices[i]._y;
+            uv._x = (out_vertices[i]._z - boundBox.minBoundBox._z) / (boundBox.maxBoundBox._z - boundBox.minBoundBox._z);
+            uv._y = (out_vertices[i]._y - boundBox.minBoundBox._y) / (boundBox.maxBoundBox._y - boundBox.minBoundBox._y);
+
             out_uvs.push_back(uv);
         }
     }

@@ -23,7 +23,7 @@ Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const
         _color[i] = color[i];
     }
     _shader = ourShader;
-    ftloader::OBJ(path_obj, _vertices.Position, _vertices.TexCoords, _vertices.Normal);
+    ftloader::OBJ(path_obj, _vertices.Position, _vertices.TexCoords, _vertices.Normal, _boundBox);
     _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal, _color);
     setupMesh();
 }
@@ -31,6 +31,7 @@ Mesh::Mesh(const char *path_obj, unsigned int textureId, Shader ourShader, const
 Mesh& Mesh::operator=(const Mesh &other){
     _texture = other._texture;
     _shader = other._shader;
+    _boundBox = other._boundBox;
     for (int i = 0; i < 4; i++){
         _color[i] = other._color[i];
     }
@@ -38,6 +39,18 @@ Mesh& Mesh::operator=(const Mesh &other){
     _verticesbuffer = ftloader::OBJTOOPENGLVERTICES(_verticesbuffersize, _vertices.Position, _vertices.TexCoords, _vertices.Normal, _color);
     setupMesh();
     return *this;
+}
+
+ftmath::vec3 Mesh::getCenter(){
+    ftmath::vec3 centeredOffset;
+    centeredOffset._x = (_boundBox.maxBoundBox._x + _boundBox.minBoundBox._x) / 2.0f;
+    centeredOffset._y = (_boundBox.maxBoundBox._y + _boundBox.minBoundBox._y) / 2.0f;
+    centeredOffset._z = (_boundBox.maxBoundBox._z + _boundBox.minBoundBox._z) / 2.0f;
+    return centeredOffset;
+}
+
+const BoundBox Mesh::getBoundBox() const{
+    return _boundBox;
 }
 
 void Mesh::clean(){

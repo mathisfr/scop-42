@@ -89,4 +89,10 @@ std::ostream& operator<<(std::ostream& os, const ftmath::vec3& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::vec2& v);
 std::ostream& operator<<(std::ostream& os, const ftmath::m4x4& m);
 
+//  Bound Box
+//  ---------
+typedef struct BoundBox{
+    ftmath::vec3 maxBoundBox;
+    ftmath::vec3 minBoundBox;
+} BoundBox;
 #endif

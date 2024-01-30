@@ -44,7 +44,8 @@ namespace ftloader{
             const char *path,
             std::vector<ftmath::vec3> &out_vertices,
             std::vector<ftmath::vec2> &out_uvs,
-            std::vector<ftmath::vec3> &out_normals
+            std::vector<ftmath::vec3> &out_normals,
+            BoundBox &boundBox
         );
         float *OBJTOOPENGLVERTICES(
             unsigned int &out_size,
