@@ -96,7 +96,7 @@ void ftloader::OBJ(
                 #endif
             }
             int params_size = in_param.size();
-            if (params_size < 3 || params_size > 4){
+            if (params_size < 3 /*|| params_size > 4*/){
                 file.close();
                 throw ftloader_OBJ_exception();
             }
@@ -125,31 +125,38 @@ void ftloader::OBJ(
                     index++;
                 }
             }
-            //  case where we have 4 param in the same line. (convert quad to triangle)
+            //  case where we have more 3 param in the same line. (convert to triangle)
             //  ---------------------------------------------------------------------
-            if (params_size == 4){
-                std::stringstream ss_param_convert[TIRANGLE_VERTICES];
-                for(unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
-                    ss_param_convert[i].str(in_param[(i+2)%4]);
-                }
-                for (unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
-                    unsigned int index = 0;
-                    while (getline(ss_param_convert[i], out_param, '/')
-                        || ((!objFormat.vertex && !objFormat.uv) && getline(ss_param_convert[i], out_param, '\n'))){
-                        switch(index)
-                        {
-                            case 0:
-                                vertexIndices.push_back(std::stoul(out_param));
-                                break;
-                            case 1:
-                                uvIndices.push_back(std::stoul(out_param));
-                                break;
-                            case 2:
-                                normalIndices.push_back(std::stoul(out_param));
-                                break;
-                        }
-                        index++;
+            if ( params_size >= 4){
+                unsigned int faceCount = TIRANGLE_VERTICES;
+                unsigned int offset = 1;
+                while (faceCount < params_size){
+                    std::stringstream ss_param_convert[TIRANGLE_VERTICES];
+                    ss_param_convert[0].str(in_param[0]);
+                    for(unsigned int i = 1; i < TIRANGLE_VERTICES; i++){
+                        ss_param_convert[i].str(in_param[(i+offset)]);
                     }
+                    for (unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
+                        unsigned int index = 0;
+                        while (getline(ss_param_convert[i], out_param, '/')
+                            || ((!objFormat.vertex && !objFormat.uv) && getline(ss_param_convert[i], out_param, '\n'))){
+                            switch(index)
+                            {
+                                case 0:
+                                    vertexIndices.push_back(std::stoul(out_param));
+                                    break;
+                                case 1:
+                                    uvIndices.push_back(std::stoul(out_param));
+                                    break;
+                                case 2:
+                                    normalIndices.push_back(std::stoul(out_param));
+                                    break;
+                            }
+                            index++;
+                        }
+                    }
+                    faceCount++;
+                    offset++;
                 }
             }
         }
@@ -313,7 +320,7 @@ float* ftloader::OBJTOOPENGLVERTICES(
 
 //  Load BMP image
 //  -----------------
-/*unsigned char* ftloader::BMP(
+unsigned char* ftloader::BMP(
     const char *path,
     int &width,
     int &height
@@ -321,6 +328,7 @@ float* ftloader::OBJTOOPENGLVERTICES(
     std::string header(54, '\0');
     unsigned int dataPos;
     unsigned int imageSize;
+    const unsigned int pixelSize = 3;
 
     std::ifstream file(path, std::ios::in | std::ios::binary);
     if (!file){
@@ -342,26 +350,27 @@ float* ftloader::OBJTOOPENGLVERTICES(
     imageSize = *(int*)&(header[0x22]);
     width = *(int*)&(header[0x12]);
     height = *(int*)&(header[0x16]);
-    #ifdef DEBUG
-    std::cout << "dataPos: " << dataPos << std::endl;
-    std::cout << "imageSize: " << imageSize << std::endl;
-    std::cout << "datawidthPos: " << width << std::endl;
-    std::cout << "height: " << height << std::endl;
-    #endif
+    const unsigned int lineSize = (width * pixelSize);
+    const unsigned int padding = lineSize % 4;
+
     if (dataPos != 138){
         std::cerr << "Not a correct BMP file\n";
         file.close();
         return nullptr;
     }
-    if (imageSize == 0) imageSize = width * height * 3;
+    if (imageSize == 0) imageSize = width * height * pixelSize;
     unsigned char* data = new unsigned char[imageSize];
     int i = 0;
-    file.read(reinterpret_cast<char*>(data), imageSize);
+    file.seekg(dataPos, std::ios::beg);
+    for (int i = 0; i < height; i++){
+      file.read(reinterpret_cast<char*>(data + (i * lineSize)), lineSize); 
+      file.seekg(padding, std::ios::cur); 
+    }
     file.close();
     return (data);
-}*/
+}
 
-std::vector<uint8_t> ftloader::BMP(
+/*std::vector<uint8_t> ftloader::BMP(
     const char *path,
     int &width,
     int &height
@@ -453,4 +462,4 @@ static bool ftloader::check_color_header(s_bitmapColorHeader &bmp_color_header) 
         return false;
     }
     return true;
-}
+}*/

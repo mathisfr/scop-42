@@ -54,10 +54,10 @@ namespace ftloader{
             const std::vector<ftmath::vec3> &in_normals,
             const ftmath::vec3 color[4]
         );
-        std::vector<uint8_t> BMP(
-            const char *in_path,
-            int &out_width,
-            int &out_height
+        unsigned char* BMP(
+            const char *path,
+            int &width,
+            int &height
         );
         static uint32_t make_stride_aligned(uint32_t align_stride, const uint32_t &row_stride);
         static bool check_color_header(s_bitmapColorHeader &bmp_color_header);

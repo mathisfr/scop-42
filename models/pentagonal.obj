@@ -1,0 +1,17 @@
+# Example OBJ file with a pyramid having a pentagonal base
+
+# List of vertices
+v  0.0  1.0  0.0  
+v  1.0  0.0 -1.0
+v -1.0  0.0 -1.0
+v -1.0  0.0  1.0
+v  1.0  0.0  1.0
+v  0.0 -1.0  0.0 
+
+# Definition of faces with vertex indices
+f 1 2 3 4 5
+f 1 2 6    
+f 2 3 6
+f 3 4 6
+f 4 5 6
+f 5 1 6

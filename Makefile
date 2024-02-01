@@ -1,5 +1,5 @@
 GLFW_FLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
-SRCS = scop.cpp src/ft_loader.cpp src/ft_math.cpp src/ft_mesh.cpp src/ft_shader.cpp src/glad.c
+SRCS = scop.cpp src/ft_loader.cpp src/ft_math.cpp src/ft_mesh.cpp src/ft_shader.cpp src/ft_light.cpp src/glad.c
 OBJETS_TMP = $(SRCS:.cpp=.o)
 OBJETS = $(OBJETS_TMP:.c=.o)
 

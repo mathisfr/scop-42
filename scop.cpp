@@ -12,6 +12,7 @@
 #include "ft_math.hpp"
 #include "ft_loader.hpp"
 #include "ft_mesh.hpp"
+#include "ft_light.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -143,10 +144,10 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int width, height;
-    std::vector<uint8_t> data = ftloader::BMP(argv[2], width, height);
-    if (!data.empty()){
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, (unsigned char*)data.data());
-        //delete[] data;
+    const unsigned char* data = ftloader::BMP(argv[2], width, height);
+    if (data){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+        delete[] data;
     }
     else{
         std::cerr << "Failed to load texture" << std::endl;
@@ -200,12 +201,10 @@ int main(int argc, char *argv[])
     }
     const ftmath::vec3 objectCenter = object.getCenter();
 
-    // prepare shader option
-    // ---------------------
-    unsigned int viewShader = glGetUniformLocation(scop42shader.ID, "view");
-    unsigned int projectionShader = glGetUniformLocation(scop42shader.ID, "projection");
-    unsigned int pointSizeShader = glGetUniformLocation(scop42shader.ID, "pointSize");
-    unsigned int mixColorShader = glGetUniformLocation(scop42shader.ID, "mixColor");
+    // prepare light
+    // -------------
+    ft_light light(1.0,1.0,1.0);
+    light.setAmbientStrength(1.0);
 
     // delta time
     // ----------
@@ -238,7 +237,12 @@ int main(int argc, char *argv[])
         }else if (!cmd.color_mix_transition){
             cmd.color_mix = ftmath::lerp<float>(cmd.color_mix, 0.0f, dt.deltaTime);
         }
-        glUniform1f(mixColorShader, cmd.color_mix);
+        scop42shader.setFloat("mixColor",cmd.color_mix);
+
+        // light shader
+        // ------------
+        scop42shader.setColor("lightColor", light.color);
+        scop42shader.setAmbientStrength("ambientStrength", light.ambientStrength);
 
         // setup lite visual mode opengl vertex rendering
         //  ---------------------------------------------
@@ -249,7 +253,7 @@ int main(int argc, char *argv[])
                 break;
             case VM_POINT:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); 
-                glUniform1f(pointSizeShader, cmd.pointAndLineSize);
+                scop42shader.setFloat("pointSize", cmd.pointAndLineSize);
                 break;
             case VM_FILL:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
@@ -339,13 +343,16 @@ int main(int argc, char *argv[])
             ImGui::EndMenuBar();
         }
         if (ImGui::BeginMenuBar()){
-            if (ImGui::BeginMenu("Background"))
+            if (ImGui::BeginMenu("Light"))
             {
+                
+                ImGui::ColorEdit3("Light Color", &light.color[0]);
+                ImGui::SliderFloat("Ambient Strength", &light.ambientStrength, 0.0f, 1.0f);
                 ImGui::ColorEdit3("Background Color", cmd.background_color);
                 if (ImGui::Button("Reset")){
+                    light.ambientStrength= light.color[0] = light.color[1] = light.color[2] = 1.0f;
                     cmd.background_color[0] = 0.2f;
-                    cmd.background_color[1] = 0.3f;
-                    cmd.background_color[2] = 0.3f;
+                    cmd.background_color[1] = cmd.background_color[2] = 0.3f;
                 }
                 ImGui::EndMenu();
             }
@@ -357,13 +364,13 @@ int main(int argc, char *argv[])
         //  -----------
         ftmath::m4x4 view(1.0f);
         view = ftmath::translatem4(view, ftmath::vec3(0.0f, 0.0f, -10.0f));
-        glUniformMatrix4fv(viewShader, 1, GL_FALSE, view.toglsl());
+        scop42shader.setMatrix("view",view.toglsl());
 
         //  projection matrix
         //  -----------------
         // m4x4 persp(float fov, float ratio, float near, float far);
         ftmath::m4x4 projection = ftmath::persp(45.0f, SCR_WIDTH / SCR_HEIGHT, 0.01f, 1000.0f);
-        glUniformMatrix4fv(projectionShader, 1, GL_FALSE, projection.toglsl());
+        scop42shader.setMatrix("projection",projection.toglsl());
 
         //  model matrix
         //  ------------
