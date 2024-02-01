@@ -201,10 +201,16 @@ int main(int argc, char *argv[])
     }
     const ftmath::vec3 objectCenter = object.getCenter();
 
+    // view camera position
+    // --------------------
+    const ftmath::vec3 cameraPosition(0.0f, 0.0f, -10.0f);
+
     // prepare light
     // -------------
     ft_light light(1.0,1.0,1.0);
-    light.setAmbientStrength(1.0);
+    light.setAmbientStrength(0.6);
+    light.setLightStrength(1.0);
+    scop42shader.setFloat3("viewPos", cameraPosition);
 
     // delta time
     // ----------
@@ -241,8 +247,12 @@ int main(int argc, char *argv[])
 
         // light shader
         // ------------
-        scop42shader.setColor("lightColor", light.color);
-        scop42shader.setAmbientStrength("ambientStrength", light.ambientStrength);
+        scop42shader.setFloat3("lightColor", light.getColor());
+        scop42shader.setFloat("lightStrength", light.getLightStrength());
+        scop42shader.setFloat("ambientStrength", light.getAmbientStrength());
+        scop42shader.setFloat("specularStrength", light.getSpecularStrength());
+        scop42shader.setFloat("specularShininess", light.getSpecularShininess());
+        scop42shader.setFloat3("lightPos", light.getPos());
 
         // setup lite visual mode opengl vertex rendering
         //  ---------------------------------------------
@@ -291,9 +301,9 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Translate"))
             {
-                ImGui::SliderFloat("X translate", &cmd.translateX, -10.0f, 10.0f);
-                ImGui::SliderFloat("Y translate", &cmd.translateY, -10.0f, 10.0f);
-                ImGui::SliderFloat("Z translate", &cmd.translateZ, -10.0f, 10.0f);
+                ImGui::SliderFloat("X translate", &cmd.translateX, -20.0f, 20.0f);
+                ImGui::SliderFloat("Y translate", &cmd.translateY, -20.0f, 20.0f);
+                ImGui::SliderFloat("Z translate", &cmd.translateZ, -20.0f, 20.0f);
                 if (ImGui::Button("Reset")){
                     cmd.translateX = 0.0f;
                     cmd.translateY = 0.0f;
@@ -345,12 +355,18 @@ int main(int argc, char *argv[])
         if (ImGui::BeginMenuBar()){
             if (ImGui::BeginMenu("Light"))
             {
-                
-                ImGui::ColorEdit3("Light Color", &light.color[0]);
-                ImGui::SliderFloat("Ambient Strength", &light.ambientStrength, 0.0f, 1.0f);
+                ImGui::SeparatorText("Color and intensity");
+                ImGui::ColorEdit3("Color", &(light.getColor())[0]);
+                ImGui::SliderFloat("Light Strength", &light.getLightStrength(), 0.0f, 1.0f);
+                ImGui::SliderFloat("Ambient Strength", &light.getAmbientStrength(), 0.0f, 1.0f);
+                ImGui::SeparatorText("Translate");
+                ImGui::SliderFloat("X translate", &(light.getPos())[0], -10.0f, 10.0f);
+                ImGui::SliderFloat("Y translate", &(light.getPos())[1], -10.0f, 10.0f);
+                ImGui::SliderFloat("Z translate", &(light.getPos())[2], -10.0f, 10.0f);
+                ImGui::SeparatorText("Background");
                 ImGui::ColorEdit3("Background Color", cmd.background_color);
                 if (ImGui::Button("Reset")){
-                    light.ambientStrength= light.color[0] = light.color[1] = light.color[2] = 1.0f;
+                    light.reset();
                     cmd.background_color[0] = 0.2f;
                     cmd.background_color[1] = cmd.background_color[2] = 0.3f;
                 }
@@ -363,7 +379,7 @@ int main(int argc, char *argv[])
         //  view matrix
         //  -----------
         ftmath::m4x4 view(1.0f);
-        view = ftmath::translatem4(view, ftmath::vec3(0.0f, 0.0f, -10.0f));
+        view = ftmath::translatem4(view, cameraPosition);
         scop42shader.setMatrix("view",view.toglsl());
 
         //  projection matrix

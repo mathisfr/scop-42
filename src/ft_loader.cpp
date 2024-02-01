@@ -7,6 +7,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstdint>
+#include <algorithm>
 #define TIRANGLE_VERTICES 3
 
 typedef struct OBJ_FORMAT{
@@ -220,6 +221,7 @@ void ftloader::OBJ(
             out_normals.push_back(ftmath::vec3(0.0f, 0.0f, 0.0f));
         }
     }
+
 #ifdef DEBUG
     std::cout << "\n\nLoad end. Total Triangle: " << out_vertices.size() << " Total Vertices\n";
     for (int i = 0; i < out_vertices.size(); i++){
@@ -260,11 +262,11 @@ float* ftloader::OBJTOOPENGLVERTICES(
         //  ------------------------------------------------
         for(int offset = 0; offset < stride; offset++){
                 #ifdef DEBUG
-                /*std::cout << "line + offset = " << line + offset << "\nout_size = " << out_size << std::endl;
+                std::cout << "line + offset = " << line + offset << "\nout_size = " << out_size << std::endl;
                 std::cout << "pos = " << pos << std::endl;
                 std::cout << "vertices.size() = " << vertices.size() << std::endl;
                 std::cout << "uvs.size() = " << vertices.size() << std::endl;
-                std::cout << "color.size() = " << vertices.size() << std::endl;*/
+                std::cout << "color.size() = " << vertices.size() << std::endl;
                 #endif
                 switch (offset){
                     // vertices
@@ -278,38 +280,37 @@ float* ftloader::OBJTOOPENGLVERTICES(
                     case 2:
                         final_vertices[line + offset] = vertices[pos]._z;
                         break;
+                    // normal
+                    // ------
+                    case 3:
+                        final_vertices[line + offset] = normals[pos]._x;
+                        break;
+                    case 4:
+                        final_vertices[line + offset] = normals[pos]._y;
+                        break;
+                    case 5:
+                        final_vertices[line + offset] = normals[pos]._z;
+                        break;
 
                     // texture
                     // -------
-                    case 3:
+                    case 6:
                         final_vertices[line + offset] = uvs[pos]._x;
                         break;
-                    case 4:
+                    case 7:
                         final_vertices[line + offset] = uvs[pos]._y;
                         break;
 
                     // color
                     // -----
-                    case 5:
+                    case 8:
                         final_vertices[line + offset] = color[colorIndex]._x;
                         break;
-                    case 6:
+                    case 9:
                         final_vertices[line + offset] = color[colorIndex]._y;
                         break;
-                    case 7:
-                        final_vertices[line + offset] = color[colorIndex]._z;
-                        break;
-
-                    // normal
-                    // ------
-                    case 8:
-                        final_vertices[line + offset] = normals[colorIndex]._x;
-                        break;
-                    case 9:
-                        final_vertices[line + offset] = normals[colorIndex]._y;
-                        break;
                     case 10:
-                        final_vertices[line + offset] = normals[colorIndex]._z;
+                        final_vertices[line + offset] = color[colorIndex]._z;
                         break;
                 }
         }

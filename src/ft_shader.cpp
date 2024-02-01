@@ -98,14 +98,11 @@ void Shader::setMatrix(const std::string &name, float* value) const
 { 
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()),1, GL_FALSE, value); 
 } 
-void Shader::setColor(const std::string &name, float r, float g, float b){
-    glUniform3f(glGetUniformLocation(ID, name.c_str()), r,g,b);
+void Shader::setFloat3(const std::string &name, float value[3]) const{
+    glUniform3f(glGetUniformLocation(ID, name.c_str()), value[0],value[1],value[2]);
 }
-void Shader::setColor(const std::string &name, float rgb[3]){
-    glUniform3f(glGetUniformLocation(ID, name.c_str()), rgb[0],rgb[1],rgb[2]);
-}
-void Shader::setAmbientStrength(const std::string &name, float strength){
-    glUniform1f(glGetUniformLocation(ID, name.c_str()), strength);
+void Shader::setFloat3(const std::string &name,  ftmath::vec3 value) const{
+    glUniform3f(glGetUniformLocation(ID, name.c_str()), value._x,value._y,value._z);
 }
 
 Shader& Shader::operator=(const Shader &other){

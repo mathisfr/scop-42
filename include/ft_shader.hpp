@@ -23,9 +23,8 @@ public:
     void setInt(const std::string &name, int value) const;   
     void setFloat(const std::string &name, float value) const;
     void setMatrix(const std::string &name, float* value) const;
-    void setColor(const std::string &name, float r, float g, float b);
-    void setColor(const std::string &name, float rgb[3]);
-    void setAmbientStrength(const std::string &name, float strength);
+    void setFloat3(const std::string &name,  float value[3]) const;
+    void setFloat3(const std::string &name,  ftmath::vec3 value) const;
     void clean();
 
     Shader& operator=(const Shader &other);
