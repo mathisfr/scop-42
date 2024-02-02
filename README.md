@@ -19,6 +19,7 @@ Ce projet a pour objectif de créer une application utilisant OpenGL pour charge
     -   D : Déplacer vers la droite
     -   A : Monter
     -   E : Descendre
+    -   FLECHES : Rotations
     -   ESPACE : Afficher les triangles
 -   Menu ImGui intégré avec des commandes supplémentaires.
 
