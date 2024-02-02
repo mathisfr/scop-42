@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <algorithm>
+#include <cctype>
 #define TIRANGLE_VERTICES 3
 
 typedef struct OBJ_FORMAT{
@@ -105,6 +106,7 @@ void ftloader::OBJ(
             for(unsigned int i = 0; i < TIRANGLE_VERTICES; i++){
                 ss_param[i].str(in_param[i]);
             }
+
             //  for all params, split by '/' and store values
             //  ---------------------------------------------
             for (unsigned int i = 0; i < TIRANGLE_VERTICES; i++){

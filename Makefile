@@ -15,9 +15,6 @@ scop: $(IMGUI_OBJETS) $(OBJETS)
 	$(info $$OBJETS is [${OBJETS}])
 	g++ -o $@ $^ $(INCLUDE) $(GLFW_FLAGS)
 
-scop_debug: $(IMGUI_OBJETS) $(OBJETS)
-	g++ -o $@ $^ $(INCLUDE) $(GLFW_FLAGS) -g -DDEBUG
-
 %.o: %.cpp
 	g++ -o $@ -c $< $(INCLUDE)
 

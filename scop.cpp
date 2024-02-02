@@ -208,9 +208,6 @@ int main(int argc, char *argv[])
     // prepare light
     // -------------
     ft_light light(1.0,1.0,1.0);
-    light.setAmbientStrength(0.6);
-    light.setLightStrength(1.0);
-    scop42shader.setFloat3("viewPos", cameraPosition);
 
     // delta time
     // ----------
@@ -253,6 +250,7 @@ int main(int argc, char *argv[])
         scop42shader.setFloat("specularStrength", light.getSpecularStrength());
         scop42shader.setFloat("specularShininess", light.getSpecularShininess());
         scop42shader.setFloat3("lightPos", light.getPos());
+
 
         // setup lite visual mode opengl vertex rendering
         //  ---------------------------------------------
@@ -461,6 +459,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_E && action == GLFW_REPEAT){
         cmd.translateY += step * dt.deltaTime;
     }
+    if (key == GLFW_KEY_UP && action == GLFW_REPEAT){
+        cmd.rotationZ -= step * dt.deltaTime * cmd.rotationSpeed;
+    }
+    if (key == GLFW_KEY_DOWN && action == GLFW_REPEAT){
+        cmd.rotationZ += step * dt.deltaTime * cmd.rotationSpeed;
+    }
+    if (key == GLFW_KEY_RIGHT && action == GLFW_REPEAT){
+        cmd.rotationY -= step * dt.deltaTime * cmd.rotationSpeed;
+    }
+    if (key == GLFW_KEY_LEFT && action == GLFW_REPEAT){
+        cmd.rotationY += step * dt.deltaTime * cmd.rotationSpeed;
+    }
 
     if (cmd.translateX > max) cmd.translateX = max;
     if (cmd.translateY > max) cmd.translateY = max;
@@ -468,6 +478,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (cmd.translateX < min) cmd.translateX = min;
     if (cmd.translateY < min) cmd.translateY = min;
     if (cmd.translateZ < min) cmd.translateZ = min;
+
+    if (cmd.rotationZ > 360.0f) cmd.rotationZ = -360.0f;
+    if (cmd.rotationZ < -360.0f) cmd.rotationZ = 360.0f;
+    if (cmd.rotationY > 360.0f) cmd.rotationY = -360.0f;
+    if (cmd.rotationY < -360.0f) cmd.rotationY = 360.0f;
 }
 
 //  scroll callback

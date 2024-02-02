@@ -13,7 +13,6 @@ uniform float pointSize;
 out vec2 TexCoord;
 out vec3 Color;
 out vec3 Normal;
-out vec3 FragPos;
 
 void main()
 {
