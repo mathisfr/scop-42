@@ -3,7 +3,7 @@
 
 ## Description
 
-Ce projet a pour objectif de créer une application utilisant OpenGL pour charger et afficher un objet 3D. L'application permettra de faire tourner l'objet autour de son centre. En plus de cela, une bibliothèque mathématique, un chargeur de fichiers bitmap (textures), et un chargeur de fichiers OBJ seront implémentés. L'interface utilisateur prend en charge diverses commandes, dont certaines sont accessibles via un menu ImGui intégré.
+Ce projet est une initiation à OpenGL, l'objectif du projet est de charger puis afficher un objet 3D. L'application permettra de faire tourner l'objet autour de son centre. En plus de cela, une bibliothèque mathématique, un chargeur de fichiers bitmap (textures), et un chargeur de fichiers OBJ seront implémentés. L'interface utilisateur prend en charge diverses commandes, dont certaines sont accessibles via un menu ImGui intégré.
 ![Scop42 OpenGL](picture.png)
 ## Fonctionnalités
 
