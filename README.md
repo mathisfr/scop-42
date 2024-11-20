@@ -1,6 +1,8 @@
 ﻿
 # Projet OpenGL : Affichage d'un objet 3D interactif
 
+*Relecture du code après un an, le code est horriblement structuré, ça fait peur...  mdrr*
+
 ## Description
 
 Ce projet est une initiation à OpenGL, l'objectif du projet est de charger puis afficher un objet 3D. L'application permettra de faire tourner l'objet autour de son centre. En plus de cela, une bibliothèque mathématique, un chargeur de fichiers bitmap (textures), et un chargeur de fichiers OBJ seront implémentés. L'interface utilisateur prend en charge diverses commandes, dont certaines sont accessibles via un menu ImGui intégré.
